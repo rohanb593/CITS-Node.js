@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Items</title>
+    <link rel="stylesheet" href="../HomePage/homePage.css">
+    <link rel="stylesheet" href="itemSorter.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Collapsible Sidebar -->
+        <main class="main-content">
+            <header>
+                <h1>Corporate IT Solutions - Inventory</h1>
+                <div class="user-info">
+                    <span>Welcome, <strong id="usernameDisplay">Admin</strong></span>
+                    <span id="cityDisplay"><i class="fas fa-map-marker-alt"></i> Lusaka</span>
+                </div>
+            </header>
+
+            <div class="content-section">
+                <div class="table-and-slideshow-container">
+                    <div class="tables-container">
+                        <div class="table-container">
+                            <table class="inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Description</th>
+                                        <th>Quantity</th>
+                                        <th>Discount</th>
+                                        <th>Unit Price</th>
+                                        <th>Line Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="live-inventory-body">
+                                    <!-- Items will be loaded via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-container">
+                            <table class="inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Total Items</th>
+                                        <th>Total Discount</th>
+                                        <th>Total Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="live-totals-table">
+                                    <!-- Totals will be loaded via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <aside class="image-slideshow">
+                        <div class="slideshow-container" id="slideshow">
+                            <!-- Slides will be loaded via JavaScript -->
+                        </div>
+                        <div class="slideshow-nav" id="slideshow-nav">
+                            <!-- Dots will be loaded via JavaScript -->
+                        </div>
+                        <div class="video-container">
+                            <video controls>
+                                <source src="videos/demo.mp4" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <footer>
+                <h1>Welcome to Corporate IT Solutions</h1>
+            </footer>
+        </main>
+    </div>    
+
+    <script>
+        // Sample inventory data (in a real app, this would come from an API)
+        const inventoryData = {
+            items: [
+                {
+                    VC_ITEM_DESC: "Laptop Dell XPS 15",
+                    NU_QTY: 5,
+                    NU_DISCOUNT: 10,
+                    NU_ITEM_PRICE: 1499.99,
+                    NU_LINE_TOTAL: 6749.95
+                },
+                {
+                    VC_ITEM_DESC: "MacBook Pro 16\"",
+                    NU_QTY: 3,
+                    NU_DISCOUNT: 5,
+                    NU_ITEM_PRICE: 2399.99,
+                    NU_LINE_TOTAL: 6839.97
+                },
+                {
+                    VC_ITEM_DESC: "Microsoft Surface Pro 8",
+                    NU_QTY: 8,
+                    NU_DISCOUNT: 15,
+                    NU_ITEM_PRICE: 1099.99,
+                    NU_LINE_TOTAL: 7479.93
+                }
+            ],
+            totals: {
+                total_items: 16,
+                total_discount: 2108.98,
+                total_price: 21069.85
+            }
+        };
+
+        // Sample slideshow images
+        const slideshowImages = [
+            "images/slide1.jpg",
+            "images/slide2.jpg",
+            "images/slide3.jpg"
+        ];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load user data
+            const username = localStorage.getItem('username') || 'Admin';
+            const city = localStorage.getItem('city') || 'Lusaka';
+            document.getElementById('usernameDisplay').textContent = username;
+            document.getElementById('cityDisplay').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city}`;
+
+            // Load inventory data
+            renderInventory();
+            renderSlideshow();
+
+            // Sidebar toggle
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.createElement('button');
+            
+            toggleBtn.className = 'sidebar-toggle';
+            toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            toggleBtn.onclick = function() {
+                sidebar.classList.toggle('collapsed');
+            };
+            
+            sidebar.appendChild(toggleBtn);
+
+            // Initialize slideshow
+            initSlideshow();
+        });
+
+        function renderInventory() {
+            const itemsBody = document.getElementById('live-inventory-body');
+            const totalsBody = document.getElementById('live-totals-table');
+            
+            // Render items
+            itemsBody.innerHTML = inventoryData.items.map(item => `
+                <tr>
+                    <td>${item.VC_ITEM_DESC}</td>
+                    <td>${item.NU_QTY}</td>
+                    <td>${item.NU_DISCOUNT}%</td>
+                    <td>$${item.NU_ITEM_PRICE.toFixed(2)}</td>
+                    <td>$${item.NU_LINE_TOTAL.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            // Render totals
+            totalsBody.innerHTML = `
+                <tr>
+                    <td>${inventoryData.totals.total_items}</td>
+                    <td>$${inventoryData.totals.total_discount.toFixed(2)}</td>
+                    <td>$${inventoryData.totals.total_price.toFixed(2)}</td>
+                </tr>
+            `;
+        }
+
+        function renderSlideshow() {
+            const slideshow = document.getElementById('slideshow');
+            const nav = document.getElementById('slideshow-nav');
+            
+            slideshow.innerHTML = slideshowImages.map((img, index) => `
+                <div class="slide ${index === 0 ? 'active' : ''}">
+                    <img src="${img}" alt="Slideshow image ${index + 1}">
+                </div>
+            `).join('');
+            
+            nav.innerHTML = slideshowImages.map((_, index) => `
+                <span class="slideshow-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
+            `).join('');
+        }
+
+        function initSlideshow() {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.slideshow-dot');
+            let currentSlide = 0;
+            const slideInterval = 5000;
+            
+            function showSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                dots.forEach(dot => dot.classList.remove('active'));
+                
+                slides[index].classList.add('active');
+                dots[index].classList.add('active');
+                currentSlide = index;
+            }
+            
+            function nextSlide() {
+                const nextIndex = (currentSlide + 1) % slides.length;
+                showSlide(nextIndex);
+            }
+            
+            let slideTimer = setInterval(nextSlide, slideInterval);
+            
+            const slideshow = document.querySelector('.slideshow-container');
+            slideshow.addEventListener('mouseenter', () => {
+                clearInterval(slideTimer);
+            });
+            
+            slideshow.addEventListener('mouseleave', () => {
+                slideTimer = setInterval(nextSlide, slideInterval);
+            });
+            
+            dots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    const slideIndex = parseInt(this.getAttribute('data-index'));
+                    showSlide(slideIndex);
+                });
+            });
+            
+            const video = document.querySelector('.video-container video');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting && !video.paused) {
+                        video.pause();
+                    }
+                });
+            }, {threshold: 0.5});
+            
+            observer.observe(video);
+        }
+    </script>
+</body>
+</html>

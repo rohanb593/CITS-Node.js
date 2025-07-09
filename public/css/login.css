@@ -1,0 +1,173 @@
+/* General Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: white;
+    background: 
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('it-background.jpg') center/cover no-repeat fixed;
+    min-height: 100vh;
+}
+
+/* Header Styles */
+header {
+    background-color: rgba(255, 107, 0, 0.9); /* Semi-transparent orange */
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 28px;
+    font-weight: bold;
+    position: relative;
+}
+
+/* Section Container */
+section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 80px);
+    padding: 20px;
+}
+
+/* Login Card */
+.outer-card {
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-top: 5px solid #ff6b00;
+}
+
+/* Form Elements */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+form h2 {
+    color: #ff6b00;
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 24px;
+}
+
+label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+input[type="text"],
+input[type="password"] {
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: all 0.3s;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: #ff6b00;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255,107,0,0.3);
+    background-color: white;
+}
+
+input[type="submit"] {
+    background-color: #ff6b00;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+input[type="submit"]:hover {
+    background-color: #e05d00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+/* Dropdown Specific Styles */
+select {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    font-size: 16px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    position: relative;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Makes dropdown match text input fields exactly */
+select {
+    width: 100%;
+    padding: 12px 15px; /* Match your input padding */
+    margin-bottom: 20px; /* Match your input margin */
+    border: 1px solid #ddd; /* Match your input border */
+    border-radius: 4px; /* Match your input radius */
+    font-size: 16px; /* Match your input font size */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Match your input font */
+    color: #333; /* Match your input text color */
+    background-color: white; /* Match your input background */
+    -webkit-appearance: none; /* Remove default styling */
+    -moz-appearance: none;
+    appearance: none;
+    height: 48px; /* Match your input height */
+    box-sizing: border-box; /* Include padding in width */
+}
+
+/* Custom dropdown arrow that matches orange theme */
+select {
+
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+    padding-right: 35px; /* Make room for arrow */
+}
+
+/* Focus state to match inputs */
+select:focus {
+    border-color: #ff6b00;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255,107,0,0.2);
+}
+
+/* Options styling */
+select option {
+    padding: 10px 15px; /* Similar padding to input */
+    font-size: 16px; /* Match font size */
+}
+
+/* Hover state for options */
+select option:hover {
+    background-color: #ff6b00;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .outer-card {
+        padding: 20px;
+    }
+    
+    form h2 {
+        font-size: 20px;
+    }
+}

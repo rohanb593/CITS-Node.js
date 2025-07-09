@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="login.css">
+</head>
+<body>
+    <header>Corporate IT Solutions</header>
+    <section>
+        <div class="outer-card">
+            <form id="loginForm">
+                <h2>Login</h2>
+                
+                <div id="error-message" class="error-message" style="display: none;"></div>
+
+                <label>Username:</label>
+                <input type="text" name="username" id="username" required>
+
+                <label>Password:</label>
+                <input type="password" name="password" id="password" required>
+
+                <label>Select your city:</label>
+                <select name="city" id="city" required>
+                    <option value="">Select your city</option>
+                    <option value="Lusaka">Lusaka</option>
+                    <option value="Ndola">Ndola</option>
+                    <option value="Kitwe">Kitwe</option>
+                    <option value="Kabwe">Kabwe</option>
+                    <option value="Livingstone">Livingstone</option>
+                </select>
+
+                <input type="submit" value="Login">
+                
+                <p style="margin-top: 15px; text-align: center;">
+                    Don't have an account? <a href="signup.html" style="color: #ff6b00;">Sign up</a>
+                </p>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const city = document.getElementById('city').value;
+            const errorDiv = document.getElementById('error-message');
+            
+            // Simple validation
+            if (!username || !password || !city) {
+                errorDiv.textContent = 'All fields are required';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Store user data in localStorage (in a real app, you would authenticate with a server)
+            localStorage.setItem('username', username);
+            localStorage.setItem('city', city);
+            
+            // Redirect to home page
+            window.location.href = '../HomePage/homePage.html';
+        });
+    </script>
+</body>
+</html>

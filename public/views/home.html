@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corporate IT Solutions</title>
+    <link rel="stylesheet" href="/public/css/homePage.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Collapsible Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <ul>
+                    <li data-content="dashboard">
+                        <a href="homePage.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span class="menu-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li data-content="dashboard">
+                        <a href="../UploadPage/uploadPage.html">
+                            <i class="fas fa-upload"></i>
+                            <span class="menu-text">Upload</span>
+                        </a>
+                    </li>
+                    <li class="logout">
+                        <a href="#" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span class="menu-text">Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header>
+                <h1>Corporate IT Solutions</h1>
+                <div class="user-info">
+                    <span>Welcome, <strong id="usernameDisplay">Admin</strong></span>
+                    <span>
+                        <i class="fas fa-map-marker-alt"></i> 
+                        <span id="cityDisplay">Lusaka</span>
+                    </span>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Sections -->
+            <div class="content-section" id="dashboard-content">
+                <h2><i class="fas fa-chart-line"></i> Dashboard Overview</h2>
+                <div class="dashboard-overview">
+                    <div class="overview-card">
+                        <h3>Inventory Summary</h3>
+                        <p>View and manage your inventory items</p>
+                        <a href="../InventoryPage/itemSorter.html" class="btn btn-primary">Go to Inventory</a>
+                    </div>
+                    <div class="overview-card">
+                        <h3>Media Uploads</h3>
+                        <p>Upload and manage media files</p>
+                        <a href="../UploadPage/uploadPage.html" class="btn btn-primary">Go to Upload</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Load user data from session
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username') || 'Admin';
+            const city = localStorage.getItem('city') || 'Lusaka';
+            
+            document.getElementById('usernameDisplay').textContent = username;
+            document.getElementById('cityDisplay').textContent = city;
+
+            // Sidebar toggle
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.createElement('button');
+            
+            toggleBtn.className = 'sidebar-toggle';
+            toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            toggleBtn.onclick = function() {
+                sidebar.classList.toggle('collapsed');
+            };
+            
+            sidebar.appendChild(toggleBtn);
+
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('username');
+                localStorage.removeItem('city');
+                window.location.href = '../LoginPage/loginDisplay.html';
+            });
+        });
+    </script>
+</body>
+</html>
