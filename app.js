@@ -26,6 +26,7 @@ const uploadRoutes = require('./routes/upload');
 const inventoryRoutes = require('./routes/inventory');
 const homeRoutes = require('./routes/home');
 
+
 app.use('/', homeRoutes);
 app.use('/auth', authRoutes);
 app.use('/upload', uploadRoutes);

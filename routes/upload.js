@@ -1,7 +1,13 @@
 const express = require('express');
+const path = require('path'); 
 const router = express.Router();
 const uploadController = require('../controllers/uploadController');
 const multer = require('multer');
+
+// Add this route to serve the HTML page
+router.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/views/upload.html'));
+  });
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {

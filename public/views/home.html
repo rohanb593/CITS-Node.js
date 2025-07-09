@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corporate IT Solutions</title>
-    <link rel="stylesheet" href="/public/css/homePage.css">
+    <link rel="stylesheet" href="/css/homePage.css">
+    <link rel="stylesheet" href="/css/theme.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -14,19 +15,19 @@
             <nav class="sidebar-nav">
                 <ul>
                     <li data-content="dashboard">
-                        <a href="homePage.html">
+                        <a href="/">
                             <i class="fas fa-tachometer-alt"></i>
                             <span class="menu-text">Dashboard</span>
                         </a>
                     </li>
                     <li data-content="dashboard">
-                        <a href="../UploadPage/uploadPage.html">
+                        <a href="/upload">
                             <i class="fas fa-upload"></i>
                             <span class="menu-text">Upload</span>
                         </a>
                     </li>
                     <li class="logout">
-                        <a href="#" id="logoutBtn">
+                        <a href="/auth/login">
                             <i class="fas fa-sign-out-alt"></i>
                             <span class="menu-text">Logout</span>
                         </a>
@@ -55,12 +56,12 @@
                     <div class="overview-card">
                         <h3>Inventory Summary</h3>
                         <p>View and manage your inventory items</p>
-                        <a href="../InventoryPage/itemSorter.html" class="btn btn-primary">Go to Inventory</a>
+                        <a href="/inventory/" class="btn btn-primary">Go to Inventory</a>
                     </div>
                     <div class="overview-card">
                         <h3>Media Uploads</h3>
                         <p>Upload and manage media files</p>
-                        <a href="../UploadPage/uploadPage.html" class="btn btn-primary">Go to Upload</a>
+                        <a href="/upload" class="btn btn-primary">Go to Upload</a>
                     </div>
                 </div>
             </div>

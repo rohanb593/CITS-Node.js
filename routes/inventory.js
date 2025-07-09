@@ -1,8 +1,16 @@
+// routes/inventory.js
 const express = require('express');
+const path = require('path');
 const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
 
-router.get('/', inventoryController.getInventory);
-router.get('/sse', inventoryController.sseInventory);
+// Serve the inventory page
+router.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/views/inventory.html'));
+});
+
+// API endpoints
+router.get('/api', inventoryController.getInventory);
+router.get('/api/sse', inventoryController.sseInventory);
 
 module.exports = router;
