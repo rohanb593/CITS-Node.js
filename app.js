@@ -11,13 +11,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Session configuration
+// app.js
 app.use(session({
-    secret: process.env.SESSION_SECRET,
-    secret: 'your-secret-key',
+    secret: process.env.SESSION_SECRET || 'your-secret-key', // Fixed duplicate key
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
+    cookie: { secure: false }
 }));
 
 // Routes
@@ -27,8 +26,11 @@ const inventoryRoutes = require('./routes/inventory');
 const homeRoutes = require('./routes/home');
 
 
-app.use('/', homeRoutes);
+app.get('/', (req, res) => {
+    res.redirect('/auth/login');
+});
 app.use('/auth', authRoutes);
+app.use('/home', homeRoutes);  // Changed from '/' to '/home'
 app.use('/upload', uploadRoutes);
 app.use('/inventory', inventoryRoutes);
 

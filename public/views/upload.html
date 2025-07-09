@@ -16,7 +16,7 @@
             <nav class="sidebar-nav">
                 <ul>
                     <li data-content="dashboard">
-                        <a href="/">
+                        <a href="/home">
                             <i class="fas fa-tachometer-alt"></i>
                             <span class="menu-text">Dashboard</span>
                         </a>
@@ -28,7 +28,7 @@
                         </a>
                     </li>
                     <li class="logout">
-                        <a href="/auth/login" >
+                        <a href="/" >
                             <i class="fas fa-sign-out-alt"></i>
                             <span class="menu-text">Logout</span>
                         </a>
@@ -84,6 +84,26 @@
             </div>
         </main>
     </div>
+
+    <!-- In home.html, inventory.html, upload.html -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get user data from sessionStorage
+            const username = sessionStorage.getItem('username') || 'User';
+            const city = sessionStorage.getItem('city') || 'Unknown City';
+            
+            document.getElementById('usernameDisplay').textContent = username;
+            document.getElementById('cityDisplay').textContent = city;
+            
+            // Logout functionality
+            document.querySelector('.logout a').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('city');
+                window.location.href = '/auth/login';
+            });
+        });
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -15,7 +15,7 @@
             <nav class="sidebar-nav">
                 <ul>
                     <li data-content="dashboard">
-                        <a href="/">
+                        <a href="/home">
                             <i class="fas fa-tachometer-alt"></i>
                             <span class="menu-text">Dashboard</span>
                         </a>
@@ -27,7 +27,7 @@
                         </a>
                     </li>
                     <li class="logout">
-                        <a href="/auth/login">
+                        <a href="/">
                             <i class="fas fa-sign-out-alt"></i>
                             <span class="menu-text">Logout</span>
                         </a>
@@ -68,33 +68,22 @@
         </main>
     </div>
 
+    <!-- In home.html, inventory.html, upload.html -->
     <script>
-        // Load user data from session
         document.addEventListener('DOMContentLoaded', function() {
-            const username = localStorage.getItem('username') || 'Admin';
-            const city = localStorage.getItem('city') || 'Lusaka';
+            // Get user data from sessionStorage
+            const username = sessionStorage.getItem('username') || 'User';
+            const city = sessionStorage.getItem('city') || 'Unknown City';
             
             document.getElementById('usernameDisplay').textContent = username;
             document.getElementById('cityDisplay').textContent = city;
-
-            // Sidebar toggle
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.createElement('button');
             
-            toggleBtn.className = 'sidebar-toggle';
-            toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            toggleBtn.onclick = function() {
-                sidebar.classList.toggle('collapsed');
-            };
-            
-            sidebar.appendChild(toggleBtn);
-
             // Logout functionality
-            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            document.querySelector('.logout a').addEventListener('click', function(e) {
                 e.preventDefault();
-                localStorage.removeItem('username');
-                localStorage.removeItem('city');
-                window.location.href = '../LoginPage/loginDisplay.html';
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('city');
+                window.location.href = '/auth/login';
             });
         });
     </script>
