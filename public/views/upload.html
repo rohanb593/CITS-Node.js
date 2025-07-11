@@ -15,20 +15,20 @@
         <aside class="sidebar" id="sidebar">
             <nav class="sidebar-nav">
                 <ul>
-                    <li data-content="dashboard">
+                    <li>
                         <a href="/home">
                             <i class="fas fa-tachometer-alt"></i>
                             <span class="menu-text">Dashboard</span>
                         </a>
                     </li>
-                    <li data-content="dashboard" class="active">
+                    <li class="active">
                         <a href="/upload">
                             <i class="fas fa-upload"></i>
                             <span class="menu-text">Upload</span>
                         </a>
                     </li>
                     <li class="logout">
-                        <a href="/" >
+                        <a href="/auth/logout">
                             <i class="fas fa-sign-out-alt"></i>
                             <span class="menu-text">Logout</span>
                         </a>
@@ -41,8 +41,8 @@
             <header>
                 <h1>Corporate IT Solutions - Media Upload</h1>
                 <div class="user-info">
-                    <span>Welcome, <strong id="usernameDisplay">Admin</strong></span>
-                    <span id="cityDisplay"><i class="fas fa-map-marker-alt"></i> Lusaka</span>
+                    <span>Welcome, <strong id="usernameDisplay">User</strong></span>
+                    <span id="cityDisplay"><i class="fas fa-map-marker-alt"></i> City</span>
                 </div>
             </header>
 
@@ -50,231 +50,278 @@
                 <h2><i class="fas fa-upload"></i> Upload Media</h2>
                 
                 <div class="upload-container">
-                    <form id="uploadForm">
-                        <div class="form-group">
-                            <label for="mediaFiles">
-                                <i class="fas fa-folder-open"></i> Select Files (Max 5)
-                            </label>
-                            <input type="file" id="mediaFiles" name="mediaFiles" multiple accept="image/*">
-                            <div class="file-info" id="fileInfo">No files selected (0/5)</div>
-                        </div>
-                        
-                        <button type="submit" class="upload-btn">
-                            <i class="fas fa-upload"></i> Upload Files
-                        </button>
-                    </form>
-
+                    <!-- Upload Area -->
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>Drag & Drop files here</h3>
+                        <p>or click to browse</p>
+                        <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+                    </div>
+                    
+                    <!-- File Preview -->
+                    <div class="file-preview" id="filePreview"></div>
+                    
+                    <!-- Progress Bar -->
                     <div class="progress-container" id="progressContainer">
                         <div class="progress-bar" id="progressBar"></div>
-                        <span class="progress-text" id="progressText">0%</span>
                     </div>
-
-                    <div class="preview-container" id="previewContainer"></div>
                     
-                    <div class="message" id="message"></div>
-
-                    <!-- Media Management Section -->
+                    <!-- Upload Button -->
+                    <button class="btn btn-primary" id="uploadBtn" style="display: none;">
+                        <i class="fas fa-upload"></i> Upload Files
+                    </button>
+                    
+                    <!-- Status Message -->
+                    <div class="message" id="message" style="display: none;"></div>
+                    
+                    <!-- User's Media Gallery -->
                     <h3 style="margin-top: 30px;"><i class="fas fa-images"></i> Your Uploaded Media</h3>
-                    <div class="media-management">
-                        <div class="media-grid" id="mediaGrid">
-                            <!-- Media items will be loaded here -->
-                        </div>
+                    <div class="media-grid" id="mediaGrid">
+                        <!-- Media items will be loaded here -->
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- In home.html, inventory.html, upload.html -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Get user data from sessionStorage
+            // Load user data from session
             const username = sessionStorage.getItem('username') || 'User';
             const city = sessionStorage.getItem('city') || 'Unknown City';
-            
             document.getElementById('usernameDisplay').textContent = username;
             document.getElementById('cityDisplay').textContent = city;
             
-            // Logout functionality
-            document.querySelector('.logout a').addEventListener('click', function(e) {
-                e.preventDefault();
-                sessionStorage.removeItem('username');
-                sessionStorage.removeItem('city');
-                window.location.href = '/auth/login';
-            });
-        });
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load user data
-            const username = localStorage.getItem('username') || 'Admin';
-            const city = localStorage.getItem('city') || 'Lusaka';
-            document.getElementById('usernameDisplay').textContent = username;
-            document.getElementById('cityDisplay').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city}`;
-
-            // Sidebar toggle
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.createElement('button');
+            // Initialize variables
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const filePreview = document.getElementById('filePreview');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const messageDiv = document.getElementById('message');
+            const mediaGrid = document.getElementById('mediaGrid');
             
-            toggleBtn.className = 'sidebar-toggle';
-            toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            toggleBtn.onclick = function() {
-                sidebar.classList.toggle('collapsed');
-            };
+            let selectedFiles = [];
             
-            sidebar.appendChild(toggleBtn);
-
-            // Logout functionality
-            document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            // Load user's existing media
+            loadUserMedia();
+            
+            // Handle drag and drop events
+            uploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                localStorage.removeItem('username');
-                localStorage.removeItem('city');
-                window.location.href = '../LoginPage/loginDisplay.html';
+                uploadArea.style.borderColor = '#ff6b00';
+                uploadArea.style.backgroundColor = 'rgba(255, 107, 0, 0.1)';
             });
-
-            // File selection handler
-            document.getElementById('mediaFiles').addEventListener('change', function(e) {
-                const files = e.target.files;
-                const fileInfo = document.getElementById('fileInfo');
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.borderColor = '#ccc';
+                uploadArea.style.backgroundColor = 'transparent';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#ccc';
+                uploadArea.style.backgroundColor = 'transparent';
                 
+                if (e.dataTransfer.files.length) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+            
+            // Handle click to browse files
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleFiles(e.target.files);
+                }
+            });
+            
+            // Handle upload button click
+            uploadBtn.addEventListener('click', uploadFiles);
+            
+            // Function to handle selected files
+            function handleFiles(files) {
+                // Clear previous selection
+                selectedFiles = [];
+                filePreview.innerHTML = '';
+                
+                // Limit to 5 files
                 if (files.length > 5) {
-                    alert('You can only upload up to 5 files at once');
-                    e.target.value = '';
-                    fileInfo.textContent = 'No files selected (0/5)';
+                    showMessage('You can only upload up to 5 files at once', 'error');
                     return;
                 }
                 
-                fileInfo.textContent = `${files.length} file(s) selected (${files.length}/5)`;
-                
-                // Show previews
-                const previewContainer = document.getElementById('previewContainer');
-                previewContainer.innerHTML = '';
-                
-                Array.from(files).forEach(file => {
-                    if (!file.type.startsWith('image/')) return;
+                // Process each file
+                Array.from(files).forEach((file, index) => {
+                    // Only accept image files
+                    if (!file.type.startsWith('image/')) {
+                        showMessage('Only image files are allowed', 'error');
+                        return;
+                    }
                     
+                    selectedFiles.push(file);
+                    
+                    // Create preview
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = (e) => {
                         const previewItem = document.createElement('div');
-                        previewItem.className = 'preview-item';
+                        previewItem.className = 'file-preview-item';
                         previewItem.innerHTML = `
-                            <img src="${e.target.result}" alt="Preview">
-                            <button class="remove-btn"><i class="fas fa-times"></i></button>
+                            <img src="${e.target.result}" alt="${file.name}">
+                            <button class="remove-btn" data-index="${index}">
+                                <i class="fas fa-times"></i>
+                            </button>
                         `;
-                        previewContainer.appendChild(previewItem);
+                        filePreview.appendChild(previewItem);
                         
                         // Add remove button functionality
-                        previewItem.querySelector('.remove-btn').addEventListener('click', function() {
+                        previewItem.querySelector('.remove-btn').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const indexToRemove = parseInt(e.currentTarget.getAttribute('data-index'));
+                            selectedFiles.splice(indexToRemove, 1);
                             previewItem.remove();
-                            // Remove the file from the input
-                            const dataTransfer = new DataTransfer();
-                            Array.from(document.getElementById('mediaFiles').files)
-                                .forEach(f => {
-                                    if (f !== file) dataTransfer.items.add(f);
-                                });
-                            document.getElementById('mediaFiles').files = dataTransfer.files;
-                            fileInfo.textContent = `${dataTransfer.files.length} file(s) selected (${dataTransfer.files.length}/5)`;
+                            
+                            if (selectedFiles.length === 0) {
+                                uploadBtn.style.display = 'none';
+                            }
                         });
                     };
                     reader.readAsDataURL(file);
                 });
-            });
-
-            // Form submission handler
-            document.getElementById('uploadForm').addEventListener('submit', function(e) {
-                e.preventDefault();
                 
-                const files = document.getElementById('mediaFiles').files;
-                if (files.length === 0) {
+                if (selectedFiles.length > 0) {
+                    uploadBtn.style.display = 'block';
+                }
+            }
+            
+            // Function to upload files to server
+            // Modify the uploadFiles function in upload.html
+            async function uploadFiles() {
+                if (selectedFiles.length === 0) {
                     showMessage('Please select at least one file', 'error');
                     return;
                 }
-                
-                // Simulate upload progress
-                const progressBar = document.getElementById('progressBar');
-                const progressText = document.getElementById('progressText');
-                const progressContainer = document.getElementById('progressContainer');
-                
-                progressContainer.style.display = 'block';
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 10;
-                    progressBar.style.width = `${progress}%`;
-                    progressText.textContent = `${progress}%`;
+
+                try {
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = '0%';
                     
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        showMessage('Files uploaded successfully!', 'success');
-                        
-                        // Simulate adding to media grid
-                        setTimeout(() => {
-                            addToMediaGrid(files);
-                            document.getElementById('uploadForm').reset();
-                            document.getElementById('fileInfo').textContent = 'No files selected (0/5)';
-                            document.getElementById('previewContainer').innerHTML = '';
-                            progressContainer.style.display = 'none';
-                            progressBar.style.width = '0%';
-                            progressText.textContent = '0%';
-                        }, 500);
+                    const formData = new FormData();
+                    selectedFiles.forEach(file => {
+                        formData.append('mediaFiles', file);
+                    });
+
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include' // This is crucial for sending cookies
+                    });
+
+                    // ... rest of the code
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showMessage('Error uploading files', 'error');
+                } finally {
+                    progressContainer.style.display = 'none';
+                }
+            }
+            
+            // Function to load user's uploaded media
+            async function loadUserMedia() {
+                try {
+                    const response = await fetch('/upload/media');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        renderMediaGrid(data.media);
+                    } else {
+                        showMessage('Failed to load media', 'error');
                     }
-                }, 200);
-            });
-
-            // Load any existing media (from localStorage in this demo)
-            loadMedia();
-        });
-
-        function showMessage(text, type) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = text;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
+                } catch (error) {
+                    console.error('Error loading media:', error);
+                    showMessage('Error loading media', 'error');
+                }
+            }
             
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000);
-        }
-
-        function addToMediaGrid(files) {
-            const mediaGrid = document.getElementById('mediaGrid');
-            
-            Array.from(files).forEach(file => {
-                if (!file.type.startsWith('image/')) return;
+            // Function to render media grid
+            function renderMediaGrid(media) {
+                if (media.length === 0) {
+                    mediaGrid.innerHTML = '<p>No media files uploaded yet.</p>';
+                    return;
+                }
                 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const mediaItem = document.createElement('div');
-                    mediaItem.className = 'media-item';
-                    mediaItem.dataset.filename = file.name;
-                    mediaItem.innerHTML = `
-                        <img src="${e.target.result}" alt="Uploaded media">
-                        <div class="media-actions">
-                            <button class="delete-btn" data-filename="${file.name}">
+                mediaGrid.innerHTML = media.map(item => `
+                    <div class="media-item" data-id="${item.id}">
+                        <img src="/upload/media/${item.id}" alt="${item.file_name}">
+                        <div class="media-info">
+                            <p><strong>${item.file_name}</strong></p>
+                            <p>${formatFileSize(item.file_size)}</p>
+                            <p>${new Date(item.uploaded_at).toLocaleString()}</p>
+                            <button class="delete-btn" data-id="${item.id}">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
                         </div>
-                    `;
-                    mediaGrid.appendChild(mediaItem);
-                    
-                    // Add delete functionality
-                    mediaItem.querySelector('.delete-btn').addEventListener('click', function() {
+                    </div>
+                `).join('');
+                
+                // Add delete functionality
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        const fileId = this.getAttribute('data-id');
+                        
                         if (confirm('Are you sure you want to delete this file?')) {
-                            mediaItem.remove();
-                            showMessage('File deleted successfully', 'success');
+                            try {
+                                const response = await fetch(`/upload/${fileId}`, {
+                                    method: 'DELETE'
+                                });
+                                
+                                const data = await response.json();
+                                
+                                if (data.success) {
+                                    showMessage('File deleted successfully', 'success');
+                                    loadUserMedia(); // Refresh the grid
+                                } else {
+                                    showMessage('Failed to delete file', 'error');
+                                }
+                            } catch (error) {
+                                console.error('Delete error:', error);
+                                showMessage('Error deleting file', 'error');
+                            }
                         }
                     });
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function loadMedia() {
-            // In a real app, this would load from a server
-            // For demo, we'll just show some placeholder text
-            const mediaGrid = document.getElementById('mediaGrid');
-            mediaGrid.innerHTML = '<p>No media files uploaded yet.</p>';
-        }
+                });
+            }
+            
+            // Helper function to format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]);
+            }
+            
+            // Helper function to show messages
+            function showMessage(text, type) {
+                messageDiv.textContent = text;
+                messageDiv.className = `message ${type}`;
+                messageDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            }
+            
+            // Progress tracking for uploads (simulated)
+            function updateProgress(percent) {
+                progressBar.style.width = `${percent}%`;
+            }
+        });
     </script>
 </body>
 </html>

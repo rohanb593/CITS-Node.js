@@ -4,22 +4,9 @@ const router = express.Router();
 const uploadController = require('../controllers/uploadController');
 const multer = require('multer');
 
-// Add this route to serve the HTML page
-router.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/views/upload.html'));
-  });
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + '_' + file.originalname);
-    }
-});
-
+// Configure multer for temporary storage
 const upload = multer({ 
-    storage: storage,
+    dest: 'temp_uploads/',
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
@@ -30,7 +17,21 @@ const upload = multer({
     }
 });
 
+// Serve the upload page
+router.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/views/upload.html'));
+});
+
+// Get user's media
+router.get('/media', uploadController.getUserMedia);
+
+// Get specific media file
+router.get('/media/:id', uploadController.getMediaFile);
+
+// Handle file upload
 router.post('/', upload.array('mediaFiles', 5), uploadController.uploadFiles);
-router.delete('/:filename', uploadController.deleteFile);
+
+// Handle file deletion
+router.delete('/:id', uploadController.deleteFile);
 
 module.exports = router;
