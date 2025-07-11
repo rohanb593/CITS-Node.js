@@ -11,11 +11,10 @@ exports.getInventory = async (req, res) => {
             FROM HD_DISPLAY
         `);
 
-        res.json({ items, totals: totals[0] || {
-            total_items: 0,
-            total_discount: 0,
-            total_price: 0
-        }});
+        res.json({ 
+            items, 
+            totals: totals[0] || { total_items: 0, total_discount: 0, total_price: 0 }
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });

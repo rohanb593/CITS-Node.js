@@ -5,8 +5,11 @@ const router = express.Router();
 const inventoryController = require('../controllers/inventoryController');
 
 // Serve the inventory page
+
+
+// routes/inventory.js
 router.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/views/inventory.html'));
+    res.sendFile(path.join(__dirname, '../public/views/inventory.html'));
 });
 
 // API endpoints

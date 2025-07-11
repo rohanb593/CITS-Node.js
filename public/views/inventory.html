@@ -35,7 +35,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="live-inventory-body">
-                                    <!-- Items will be loaded via JavaScript -->
+                                    
                                 </tbody>
                             </table>
                         </div>
@@ -62,12 +62,12 @@
                         <div class="slideshow-nav" id="slideshow-nav">
                             <!-- Dots will be loaded via JavaScript -->
                         </div>
-                        <div class="video-container">
+                        <!-- <div class="video-container">
                             <video controls>
-                                <source src="videos/demo.mp4" type="video/mp4">
+                                <source src="/uploads/demo.mp4" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
-                        </div>
+                        </div> -->
                     </aside>
                 </div>
             </div>
@@ -79,113 +79,124 @@
     </div>    
 
     <script>
-        // Sample inventory data (in a real app, this would come from an API)
-        const inventoryData = {
-            items: [
-                {
-                    VC_ITEM_DESC: "Laptop Dell XPS 15",
-                    NU_QTY: 5,
-                    NU_DISCOUNT: 10,
-                    NU_ITEM_PRICE: 1499.99,
-                    NU_LINE_TOTAL: 6749.95
-                },
-                {
-                    VC_ITEM_DESC: "MacBook Pro 16\"",
-                    NU_QTY: 3,
-                    NU_DISCOUNT: 5,
-                    NU_ITEM_PRICE: 2399.99,
-                    NU_LINE_TOTAL: 6839.97
-                },
-                {
-                    VC_ITEM_DESC: "Microsoft Surface Pro 8",
-                    NU_QTY: 8,
-                    NU_DISCOUNT: 15,
-                    NU_ITEM_PRICE: 1099.99,
-                    NU_LINE_TOTAL: 7479.93
-                }
-            ],
-            totals: {
-                total_items: 16,
-                total_discount: 2108.98,
-                total_price: 21069.85
-            }
-        };
-
-        // Sample slideshow images
-        const slideshowImages = [
-            "images/slide1.jpg",
-            "images/slide2.jpg",
-            "images/slide3.jpg"
-        ];
-
         document.addEventListener('DOMContentLoaded', function() {
             // Load user data
-            const username = localStorage.getItem('username') || 'Admin';
-            const city = localStorage.getItem('city') || 'Lusaka';
+            const username = sessionStorage.getItem('username') || 'Admin';
+            const city = sessionStorage.getItem('city') || 'Lusaka';
             document.getElementById('usernameDisplay').textContent = username;
             document.getElementById('cityDisplay').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city}`;
 
-            // Load inventory data
-            renderInventory();
-            renderSlideshow();
-
-            // Sidebar toggle
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = document.createElement('button');
+            // Load inventory data from API
+            fetchInventoryData();
             
-            toggleBtn.className = 'sidebar-toggle';
-            toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-            toggleBtn.onclick = function() {
-                sidebar.classList.toggle('collapsed');
-            };
-            
-            sidebar.appendChild(toggleBtn);
-
-            // Initialize slideshow
-            initSlideshow();
+            // Load slideshow images from database
+            fetchSlideshowImages();
         });
 
-        function renderInventory() {
+        async function fetchInventoryData() {
+            try {
+                // Corrected API endpoint
+                const response = await fetch('/inventory/api');
+                if (!response.ok) throw new Error('Failed to fetch inventory data');
+                
+                const data = await response.json();
+                console.log('Inventory data:', data); // For debugging
+                
+                if (data.items && data.totals) {
+                    renderInventory(data.items, data.totals);
+                }
+            } catch (error) {
+                console.error('Error fetching inventory data:', error);
+                renderInventory([], { total_items: 0, total_discount: 0, total_price: 0 });
+            }
+        }
+
+        async function fetchSlideshowImages() {
+            try {
+                const response = await fetch('/upload/media');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch slideshow images');
+                }
+                const data = await response.json();
+                
+                if (data.success && data.media) {
+                    // Filter only image files
+                    const imageFiles = data.media.filter(item => 
+                        item.file_type.startsWith('image/')
+                    );
+                    
+                    if (imageFiles.length > 0) {
+                        initSlideshow(imageFiles);
+                    } else {
+                        // Fallback to default images if no images in database
+                        initSlideshow([
+                            { id: 'default1', file_name: 'Default Image 1' },
+                            { id: 'default2', file_name: 'Default Image 2' },
+                            { id: 'default3', file_name: 'Default Image 3' }
+                        ], true);
+                    }
+                } else {
+                    console.error('Invalid data structure from media API');
+                    // Fallback to default images
+                    initSlideshow([
+                        { id: 'default1', file_name: 'Default Image 1' },
+                        { id: 'default2', file_name: 'Default Image 2' },
+                        { id: 'default3', file_name: 'Default Image 3' }
+                    ], true);
+                }
+            } catch (error) {
+                console.error('Error fetching slideshow images:', error);
+                // Fallback to default images
+                initSlideshow([
+                    { id: 'default1', file_name: 'Default Image 1' },
+                    { id: 'default2', file_name: 'Default Image 2' },
+                    { id: 'default3', file_name: 'Default Image 3' }
+                ], true);
+            }
+        }
+
+        function renderInventory(items, totals) {
             const itemsBody = document.getElementById('live-inventory-body');
             const totalsBody = document.getElementById('live-totals-table');
             
             // Render items
-            itemsBody.innerHTML = inventoryData.items.map(item => `
+            itemsBody.innerHTML = items.map(item => `
                 <tr>
-                    <td>${item.VC_ITEM_DESC}</td>
-                    <td>${item.NU_QTY}</td>
-                    <td>${item.NU_DISCOUNT}%</td>
-                    <td>$${item.NU_ITEM_PRICE.toFixed(2)}</td>
-                    <td>$${item.NU_LINE_TOTAL.toFixed(2)}</td>
+                    <td>${item.VC_ITEM_DESC || 'N/A'}</td>
+                    <td>${item.NU_QTY || 0}</td>
+                    <td>${item.NU_DISCOUNT || 0}%</td>
+                    <td>$${(item.NU_ITEM_PRICE || 0).toFixed(2)}</td>
+                    <td>$${(item.NU_LINE_TOTAL || 0).toFixed(2)}</td>
                 </tr>
             `).join('');
 
             // Render totals
             totalsBody.innerHTML = `
                 <tr>
-                    <td>${inventoryData.totals.total_items}</td>
-                    <td>$${inventoryData.totals.total_discount.toFixed(2)}</td>
-                    <td>$${inventoryData.totals.total_price.toFixed(2)}</td>
+                    <td>${totals.total_items || 0}</td>
+                    <td>$${(totals.total_discount || 0).toFixed(2)}</td>
+                    <td>$${(totals.total_price || 0).toFixed(2)}</td>
                 </tr>
             `;
         }
 
-        function renderSlideshow() {
+        function initSlideshow(images, useDefaultImages = false) {
             const slideshow = document.getElementById('slideshow');
             const nav = document.getElementById('slideshow-nav');
             
-            slideshow.innerHTML = slideshowImages.map((img, index) => `
+            slideshow.innerHTML = images.map((img, index) => `
                 <div class="slide ${index === 0 ? 'active' : ''}">
-                    <img src="${img}" alt="Slideshow image ${index + 1}">
+                    ${useDefaultImages ? 
+                        `<img src="images/slide${index+1}.jpg" alt="${img.file_name}">` : 
+                        `<img src="/upload/media/${img.id}" alt="${img.file_name}">`
+                    }
                 </div>
             `).join('');
             
-            nav.innerHTML = slideshowImages.map((_, index) => `
+            nav.innerHTML = images.map((_, index) => `
                 <span class="slideshow-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
             `).join('');
-        }
 
-        function initSlideshow() {
             const slides = document.querySelectorAll('.slide');
             const dots = document.querySelectorAll('.slideshow-dot');
             let currentSlide = 0;
@@ -207,12 +218,12 @@
             
             let slideTimer = setInterval(nextSlide, slideInterval);
             
-            const slideshow = document.querySelector('.slideshow-container');
-            slideshow.addEventListener('mouseenter', () => {
+            const slideshowContainer = document.querySelector('.slideshow-container');
+            slideshowContainer.addEventListener('mouseenter', () => {
                 clearInterval(slideTimer);
             });
             
-            slideshow.addEventListener('mouseleave', () => {
+            slideshowContainer.addEventListener('mouseleave', () => {
                 slideTimer = setInterval(nextSlide, slideInterval);
             });
             
@@ -223,16 +234,16 @@
                 });
             });
             
-            const video = document.querySelector('.video-container video');
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (!entry.isIntersecting && !video.paused) {
-                        video.pause();
-                    }
-                });
-            }, {threshold: 0.5});
+            // const video = document.querySelector('.video-container video');
+            // const observer = new IntersectionObserver((entries) => {
+            //     entries.forEach(entry => {
+            //         if (!entry.isIntersecting && !video.paused) {
+            //             video.pause();
+            //         }
+            //     });
+            // }, {threshold: 0.5});
             
-            observer.observe(video);
+            // observer.observe(video);
         }
     </script>
 </body>
