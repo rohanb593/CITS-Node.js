@@ -323,5 +323,24 @@
             }
         });
     </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get user data from sessionStorage
+        const username = sessionStorage.getItem('username') || 'User';
+        const city = sessionStorage.getItem('city') || 'Unknown City';
+        
+        document.getElementById('usernameDisplay').textContent = username;
+        document.getElementById('cityDisplay').textContent = city;
+        
+        // Logout functionality
+        document.querySelector('.logout a').addEventListener('click', function(e) {
+            e.preventDefault();
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('city');
+            window.location.href = '/auth/login';
+        });
+    });
+</script>
 </body>
 </html>
