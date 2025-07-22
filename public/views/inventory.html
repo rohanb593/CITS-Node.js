@@ -62,12 +62,13 @@
                         <div class="slideshow-nav" id="slideshow-nav">
                             <!-- Dots will be loaded via JavaScript -->
                         </div>
-                        <!-- <div class="video-container">
-                            <video controls>
-                                <source src="/uploads/demo.mp4" type="video/mp4">
+                        
+                        <!-- VIDEO CONTAINER ADDED HERE -->
+                        <div class="video-container">
+                            <video id="featuredVideo" controls>
                                 Your browser does not support the video tag.
                             </video>
-                        </div> -->
+                        </div>
                     </aside>
                 </div>
             </div>
@@ -89,18 +90,16 @@
             // Load inventory data from API
             fetchInventoryData();
             
-            // Load slideshow images from database
-            fetchSlideshowImages();
+            // Load slideshow images and video from database
+            fetchMedia();
         });
 
         async function fetchInventoryData() {
             try {
-                // Corrected API endpoint
                 const response = await fetch('/inventory/api');
                 if (!response.ok) throw new Error('Failed to fetch inventory data');
                 
                 const data = await response.json();
-                console.log('Inventory data:', data); // For debugging
                 
                 if (data.items && data.totals) {
                     renderInventory(data.items, data.totals);
@@ -111,48 +110,81 @@
             }
         }
 
-        async function fetchSlideshowImages() {
+        async function fetchMedia() {
             try {
                 const response = await fetch('/upload/media');
                 if (!response.ok) {
-                    throw new Error('Failed to fetch slideshow images');
+                    throw new Error('Failed to fetch media');
                 }
                 const data = await response.json();
                 
                 if (data.success && data.media) {
-                    // Filter only image files
-                    const imageFiles = data.media.filter(item => 
+                    // Separate images and videos
+                    const images = data.media.filter(item => 
                         item.file_type.startsWith('image/')
                     );
                     
-                    if (imageFiles.length > 0) {
-                        initSlideshow(imageFiles);
+                    const videos = data.media.filter(item => 
+                        item.file_type.startsWith('video/')
+                    );
+                    
+                    // Initialize slideshow with images
+                    if (images.length > 0) {
+                        initSlideshow(images);
                     } else {
-                        // Fallback to default images if no images in database
+                        // Fallback to default images
                         initSlideshow([
-                            { id: 'default1', file_name: 'Default Image 1' },
-                            { id: 'default2', file_name: 'Default Image 2' },
-                            { id: 'default3', file_name: 'Default Image 3' }
+                            { id: 'default1', file_path: '/images/slide1.jpg', file_name: 'Default Image 1' },
+                            { id: 'default2', file_path: '/images/slide2.jpg', file_name: 'Default Image 2' },
+                            { id: 'default3', file_path: '/images/slide3.jpg', file_name: 'Default Image 3' }
                         ], true);
+                    }
+                    
+                    // Initialize video player
+                    if (videos.length > 0) {
+                        initVideoPlayer(videos[0]);
+                    } else {
+                        // Fallback to default video
+                        initVideoPlayer({
+                            file_path: '/videos/demo.mp4',
+                            file_name: 'Demo Video'
+                        });
                     }
                 } else {
                     console.error('Invalid data structure from media API');
-                    // Fallback to default images
+                    // Fallback to default media
                     initSlideshow([
-                        { id: 'default1', file_name: 'Default Image 1' },
-                        { id: 'default2', file_name: 'Default Image 2' },
-                        { id: 'default3', file_name: 'Default Image 3' }
+                        { id: 'default1', file_path: '/images/slide1.jpg', file_name: 'Default Image 1' },
+                        { id: 'default2', file_path: '/images/slide2.jpg', file_name: 'Default Image 2' },
+                        { id: 'default3', file_path: '/images/slide3.jpg', file_name: 'Default Image 3' }
                     ], true);
+                    
+                    initVideoPlayer({
+                        file_path: '/videos/demo.mp4',
+                        file_name: 'Demo Video'
+                    });
                 }
             } catch (error) {
-                console.error('Error fetching slideshow images:', error);
-                // Fallback to default images
+                console.error('Error fetching media:', error);
+                // Fallback to default media
                 initSlideshow([
-                    { id: 'default1', file_name: 'Default Image 1' },
-                    { id: 'default2', file_name: 'Default Image 2' },
-                    { id: 'default3', file_name: 'Default Image 3' }
+                    { id: 'default1', file_path: '/images/slide1.jpg', file_name: 'Default Image 1' },
+                    { id: 'default2', file_path: '/images/slide2.jpg', file_name: 'Default Image 2' },
+                    { id: 'default3', file_path: '/images/slide3.jpg', file_name: 'Default Image 3' }
                 ], true);
+                
+                initVideoPlayer({
+                    file_path: '/videos/demo.mp4',
+                    file_name: 'Demo Video'
+                });
             }
+        }
+        
+        function initVideoPlayer(video) {
+            const videoPlayer = document.getElementById('featuredVideo');
+            videoPlayer.src = video.file_path;
+            videoPlayer.load();
+            videoPlayer.setAttribute('title', video.file_name);
         }
 
         function renderInventory(items, totals) {
@@ -186,10 +218,7 @@
             
             slideshow.innerHTML = images.map((img, index) => `
                 <div class="slide ${index === 0 ? 'active' : ''}">
-                    ${useDefaultImages ? 
-                        `<img src="images/slide${index+1}.jpg" alt="${img.file_name}">` : 
-                        `<img src="/upload/media/${img.id}" alt="${img.file_name}">`
-                    }
+                    <img src="${img.file_path}" alt="${img.file_name}">
                 </div>
             `).join('');
             
@@ -233,17 +262,6 @@
                     showSlide(slideIndex);
                 });
             });
-            
-            // const video = document.querySelector('.video-container video');
-            // const observer = new IntersectionObserver((entries) => {
-            //     entries.forEach(entry => {
-            //         if (!entry.isIntersecting && !video.paused) {
-            //             video.pause();
-            //         }
-            //     });
-            // }, {threshold: 0.5});
-            
-            // observer.observe(video);
         }
     </script>
 </body>

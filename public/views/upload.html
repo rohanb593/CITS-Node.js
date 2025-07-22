@@ -55,7 +55,7 @@
                         <i class="fas fa-cloud-upload-alt"></i>
                         <h3>Drag & Drop files here</h3>
                         <p>or click to browse</p>
-                        <input type="file" id="fileInput" accept="image/*" multiple style="display: none;">
+                        <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display: none;">
                     </div>
                     
                     <!-- File Preview -->
@@ -158,9 +158,9 @@
                 
                 // Process each file
                 Array.from(files).forEach((file, index) => {
-                    // Only accept image files
-                    if (!file.type.startsWith('image/')) {
-                        showMessage('Only image files are allowed', 'error');
+                    // Only accept image and video files
+                    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+                        showMessage('Only image and video files are allowed', 'error');
                         return;
                     }
                     
@@ -171,12 +171,25 @@
                     reader.onload = (e) => {
                         const previewItem = document.createElement('div');
                         previewItem.className = 'file-preview-item';
-                        previewItem.innerHTML = `
-                            <img src="${e.target.result}" alt="${file.name}">
-                            <button class="remove-btn" data-index="${index}">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        `;
+                        
+                        if (file.type.startsWith('image/')) {
+                            previewItem.innerHTML = `
+                                <img src="${e.target.result}" alt="${file.name}">
+                                <button class="remove-btn" data-index="${index}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                        } else if (file.type.startsWith('video/')) {
+                            previewItem.innerHTML = `
+                                <video controls>
+                                    <source src="${e.target.result}" type="${file.type}">
+                                </video>
+                                <button class="remove-btn" data-index="${index}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                        }
+                        
                         filePreview.appendChild(previewItem);
                         
                         // Add remove button functionality
@@ -200,7 +213,6 @@
             }
             
             // Function to upload files to server
-            // Modify the uploadFiles function in upload.html
             async function uploadFiles() {
                 if (selectedFiles.length === 0) {
                     showMessage('Please select at least one file', 'error');
@@ -219,10 +231,23 @@
                     const response = await fetch('/upload', {
                         method: 'POST',
                         body: formData,
-                        credentials: 'include' // This is crucial for sending cookies
+                        credentials: 'include'
                     });
 
-                    // ... rest of the code
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showMessage('Files uploaded successfully!', 'success');
+                        // Clear selection
+                        selectedFiles = [];
+                        filePreview.innerHTML = '';
+                        uploadBtn.style.display = 'none';
+                        
+                        // Reload media gallery
+                        loadUserMedia();
+                    } else {
+                        showMessage(data.message || 'Some files failed to upload', 'error');
+                    }
                 } catch (error) {
                     console.error('Upload error:', error);
                     showMessage('Error uploading files', 'error');
@@ -257,7 +282,12 @@
                 
                 mediaGrid.innerHTML = media.map(item => `
                     <div class="media-item" data-id="${item.id}">
-                        <img src="/upload/media/${item.id}" alt="${item.file_name}">
+                        ${item.file_type.startsWith('image/') ? 
+                            `<img src="${item.file_path}" alt="${item.file_name}">` : 
+                            `<video controls>
+                                <source src="${item.file_path}" type="${item.file_type}">
+                            </video>`
+                        }
                         <div class="media-info">
                             <p><strong>${item.file_name}</strong></p>
                             <p>${formatFileSize(item.file_size)}</p>
@@ -298,13 +328,14 @@
             }
             
             // Helper function to format file size
+            // Helper function to format file size
             function formatFileSize(bytes) {
                 if (bytes === 0) return '0 Bytes';
                 const k = 1024;
                 const sizes = ['Bytes', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]);
-            }
+}
             
             // Helper function to show messages
             function showMessage(text, type) {
@@ -315,11 +346,6 @@
                 setTimeout(() => {
                     messageDiv.style.display = 'none';
                 }, 5000);
-            }
-            
-            // Progress tracking for uploads (simulated)
-            function updateProgress(percent) {
-                progressBar.style.width = `${percent}%`;
             }
         });
     </script>

@@ -5,14 +5,23 @@ const uploadController = require('../controllers/uploadController');
 const multer = require('multer');
 
 // Configure multer for temporary storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'temp_uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
 const upload = multer({ 
-    dest: 'temp_uploads/',
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    storage,
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+        if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
             cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed'), false);
+            cb(new Error('Only image and video files are allowed'), false);
         }
     }
 });
@@ -24,9 +33,6 @@ router.get('/', (req, res) => {
 
 // Get user's media
 router.get('/media', uploadController.getUserMedia);
-
-// Get specific media file
-router.get('/media/:id', uploadController.getMediaFile);
 
 // Handle file upload
 router.post('/', upload.array('mediaFiles', 5), uploadController.uploadFiles);

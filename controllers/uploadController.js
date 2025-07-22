@@ -22,31 +22,41 @@ exports.uploadFiles = async (req, res) => {
             });
         }
 
+        // Create uploads directory if it doesn't exist
+        const uploadDir = path.join(__dirname, '../public/uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
         // Process each uploaded file
         const uploadResults = await Promise.all(req.files.map(async (file) => {
             try {
-                // Read the file data
-                const fileData = fs.readFileSync(file.path);
+                // Generate unique filename
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+                const ext = path.extname(file.originalname);
+                const fileName = uniqueSuffix + ext;
+                const filePath = path.join(uploadDir, fileName);
                 
-                // Insert into database
+                // Move file to permanent location
+                fs.renameSync(file.path, filePath);
+                
+                // Insert metadata into database
                 const [result] = await db.query(
-                    'INSERT INTO uploaded_media (user_id, file_name, file_type, file_size, file_data) VALUES (?, ?, ?, ?, ?)',
+                    'INSERT INTO uploaded_media (user_id, file_name, file_type, file_size, file_path) VALUES (?, ?, ?, ?, ?)',
                     [
                         userId,
                         file.originalname,
                         file.mimetype,
                         file.size,
-                        fileData
+                        `/uploads/${fileName}`
                     ]
                 );
-
-                // Delete the temporary file
-                fs.unlinkSync(file.path);
 
                 return {
                     success: true,
                     fileId: result.insertId,
-                    fileName: file.originalname
+                    fileName: file.originalname,
+                    filePath: `/uploads/${fileName}`
                 };
             } catch (error) {
                 console.error(`Error processing file ${file.originalname}:`, error);
@@ -68,7 +78,7 @@ exports.uploadFiles = async (req, res) => {
                 results: uploadResults
             });
         } else {
-            res.status(207).json({ // 207 Multi-Status
+            res.status(207).json({
                 success: false,
                 message: 'Some files failed to upload',
                 results: uploadResults
@@ -84,22 +94,34 @@ exports.uploadFiles = async (req, res) => {
     }
 };
 
-// ... rest of your existing code ...
-
 exports.deleteFile = async (req, res) => {
     try {
         const userId = req.session.userId;
         const fileId = req.params.id;
 
-        // Delete from database
-        const [result] = await db.query(
-            'DELETE FROM uploaded_media WHERE id = ? AND user_id = ?',
+        // Get file path from database
+        const [fileRows] = await db.query(
+            'SELECT file_path FROM uploaded_media WHERE id = ? AND user_id = ?',
             [fileId, userId]
         );
 
-        if (result.affectedRows === 0) {
+        if (fileRows.length === 0) {
             return res.status(404).json({ success: false, message: 'File not found or not authorized' });
         }
+
+        const filePath = fileRows[0].file_path;
+        const fullPath = path.join(__dirname, '../public', filePath);
+        
+        // Delete from filesystem
+        if (fs.existsSync(fullPath)) {
+            fs.unlinkSync(fullPath);
+        }
+
+        // Delete from database
+        await db.query(
+            'DELETE FROM uploaded_media WHERE id = ?',
+            [fileId]
+        );
 
         res.json({ success: true });
     } catch (error) {
@@ -113,7 +135,7 @@ exports.getUserMedia = async (req, res) => {
         const userId = req.session.userId;
         
         const [media] = await db.query(
-            'SELECT id, file_name, file_type, file_size, uploaded_at FROM uploaded_media WHERE user_id = ? ORDER BY uploaded_at DESC LIMIT 10',
+            'SELECT id, file_name, file_type, file_size, file_path, uploaded_at FROM uploaded_media WHERE user_id = ? ORDER BY uploaded_at DESC LIMIT 10',
             [userId]
         );
 
@@ -121,27 +143,5 @@ exports.getUserMedia = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-exports.getMediaFile = async (req, res) => {
-    try {
-        const fileId = req.params.id;
-        
-        const [rows] = await db.query(
-            'SELECT file_type, file_data FROM uploaded_media WHERE id = ?',
-            [fileId]
-        );
-
-        if (rows.length === 0) {
-            return res.status(404).send('File not found');
-        }
-
-        const file = rows[0];
-        res.set('Content-Type', file.file_type);
-        res.send(file.file_data);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Server error');
     }
 };

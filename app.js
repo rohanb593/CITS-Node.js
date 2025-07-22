@@ -31,9 +31,14 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.js
+// Serve uploaded files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// Session middleware
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
@@ -53,22 +58,15 @@ const uploadRoutes = require('./routes/upload');
 const inventoryRoutes = require('./routes/inventory');
 const homeRoutes = require('./routes/home');
 
-
 app.get('/', (req, res) => {
     res.redirect('/auth/login');
 });
 app.use('/auth', authRoutes);
-app.use('/home', homeRoutes);  // Changed from '/' to '/home'
+app.use('/home', homeRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/inventory', inventoryRoutes);
 
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
-// Add this to app.js or a new middleware file
+// Session verification middleware
 const verifySession = (req, res, next) => {
     if (!req.session.userId) {
         return res.status(401).json({ 
@@ -83,3 +81,9 @@ const verifySession = (req, res, next) => {
 app.use('/upload', verifySession);
 app.use('/inventory', verifySession);
 app.use('/home', verifySession);
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
