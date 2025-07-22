@@ -8,6 +8,10 @@ router.get('/login', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/views/login.html'));
 });
 
+router.get('/signup', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/views/signup.html'));
+});
+
 router.post('/login', authController.login);
 router.post('/signup', authController.signup);
 router.get('/logout', authController.logout);
