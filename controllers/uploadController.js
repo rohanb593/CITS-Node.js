@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../models/db');
 
+// In uploadController.js - modify the uploadFiles function
 exports.uploadFiles = async (req, res) => {
     try {
         console.log('Session in upload:', req.session);
@@ -22,15 +23,34 @@ exports.uploadFiles = async (req, res) => {
             });
         }
 
-        // Create uploads directory if it doesn't exist
-        const uploadDir = path.join(__dirname, '../public/uploads');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
+        // Create separate upload directories if they don't exist
+        const imageUploadDir = path.join(__dirname, '../public/uploads/images');
+        const videoUploadDir = path.join(__dirname, '../public/uploads/videos');
+        
+        if (!fs.existsSync(imageUploadDir)) {
+            fs.mkdirSync(imageUploadDir, { recursive: true });
+        }
+        if (!fs.existsSync(videoUploadDir)) {
+            fs.mkdirSync(videoUploadDir, { recursive: true });
+        }
+
+        // Count video files to enforce limit
+        const videoCount = req.files.filter(file => file.mimetype.startsWith('video/')).length;
+        if (videoCount > 5) {
+            return res.status(400).json({
+                success: false,
+                message: 'Maximum 5 videos allowed per upload'
+            });
         }
 
         // Process each uploaded file
         const uploadResults = await Promise.all(req.files.map(async (file) => {
             try {
+                // Determine destination folder based on file type
+                const isVideo = file.mimetype.startsWith('video/');
+                const uploadDir = isVideo ? videoUploadDir : imageUploadDir;
+                const subfolder = isVideo ? 'videos' : 'images';
+                
                 // Generate unique filename
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
                 const ext = path.extname(file.originalname);
@@ -48,7 +68,7 @@ exports.uploadFiles = async (req, res) => {
                         file.originalname,
                         file.mimetype,
                         file.size,
-                        `/uploads/${fileName}`
+                        `/uploads/${subfolder}/${fileName}`
                     ]
                 );
 
@@ -56,7 +76,7 @@ exports.uploadFiles = async (req, res) => {
                     success: true,
                     fileId: result.insertId,
                     fileName: file.originalname,
-                    filePath: `/uploads/${fileName}`
+                    filePath: `/uploads/${subfolder}/${fileName}`
                 };
             } catch (error) {
                 console.error(`Error processing file ${file.originalname}:`, error);
@@ -68,6 +88,7 @@ exports.uploadFiles = async (req, res) => {
             }
         }));
 
+        // Rest of the function remains the same...
         // Check if all uploads succeeded
         const allSuccess = uploadResults.every(result => result.success);
         
@@ -84,7 +105,6 @@ exports.uploadFiles = async (req, res) => {
                 results: uploadResults
             });
         }
-
     } catch (error) {
         console.error('Upload controller error:', error);
         res.status(500).json({ 

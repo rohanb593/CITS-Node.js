@@ -150,9 +150,12 @@
                 selectedFiles = [];
                 filePreview.innerHTML = '';
                 
-                // Limit to 5 files
-                if (files.length > 5) {
-                    showMessage('You can only upload up to 5 files at once', 'error');
+                // Count video files
+                const videoFiles = Array.from(files).filter(file => file.type.startsWith('video/'));
+                
+                // Check video limit
+                if (videoFiles.length > 5) {
+                    showMessage('You can only upload up to 5 videos at once', 'error');
                     return;
                 }
                 

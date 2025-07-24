@@ -140,15 +140,15 @@
                         ], true);
                     }
                     
-                    // Initialize video player
+                    // Initialize video player with ALL videos (not just first one)
                     if (videos.length > 0) {
-                        initVideoPlayer(videos[0]);
+                        initVideoPlayer(videos); // Pass the array of videos
                     } else {
                         // Fallback to default video
-                        initVideoPlayer({
+                        initVideoPlayer([{
                             file_path: '/videos/demo.mp4',
                             file_name: 'Demo Video'
-                        });
+                        }]);
                     }
                 } else {
                     console.error('Invalid data structure from media API');
@@ -159,10 +159,10 @@
                         { id: 'default3', file_path: '/images/slide3.jpg', file_name: 'Default Image 3' }
                     ], true);
                     
-                    initVideoPlayer({
+                    initVideoPlayer([{
                         file_path: '/videos/demo.mp4',
                         file_name: 'Demo Video'
-                    });
+                    }]);
                 }
             } catch (error) {
                 console.error('Error fetching media:', error);
@@ -173,18 +173,65 @@
                     { id: 'default3', file_path: '/images/slide3.jpg', file_name: 'Default Image 3' }
                 ], true);
                 
-                initVideoPlayer({
+                initVideoPlayer([{
                     file_path: '/videos/demo.mp4',
                     file_name: 'Demo Video'
-                });
+                }]);
             }
         }
         
-        function initVideoPlayer(video) {
+        function initVideoPlayer(videos) {
+            const videoContainer = document.querySelector('.video-container');
             const videoPlayer = document.getElementById('featuredVideo');
-            videoPlayer.src = video.file_path;
-            videoPlayer.load();
-            videoPlayer.setAttribute('title', video.file_name);
+            const videoNav = document.createElement('div');
+            videoNav.className = 'video-nav';
+            videoContainer.appendChild(videoNav);
+
+            let currentVideoIndex = 0;
+            
+            // Create navigation dots for videos
+            videoNav.innerHTML = videos.map((_, index) => `
+                <span class="video-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
+            `).join('');
+
+            const videoDots = document.querySelectorAll('.video-dot');
+            
+            // Function to play a specific video
+            function playVideo(index) {
+                if (index >= videos.length) index = 0;
+                if (index < 0) index = videos.length - 1;
+                
+                currentVideoIndex = index;
+                const video = videos[index];
+                
+                videoPlayer.src = video.file_path;
+                videoPlayer.load();
+                videoPlayer.setAttribute('title', video.file_name);
+                
+                // Update active dot
+                videoDots.forEach(dot => dot.classList.remove('active'));
+                videoDots[index].classList.add('active');
+                
+                videoPlayer.play().catch(e => console.log('Autoplay prevented:', e));
+            }
+
+            // When video ends, play next one
+            videoPlayer.addEventListener('ended', () => {
+                playVideo(currentVideoIndex + 1);
+            });
+
+            // Dot navigation for videos
+            videoDots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    const videoIndex = parseInt(this.getAttribute('data-index'));
+                    playVideo(videoIndex);
+                });
+            });
+
+            // Start with first video
+            if (videos.length > 0) {
+                playVideo(0);
+            }
         }
 
         function renderInventory(items, totals) {
@@ -212,56 +259,54 @@
             `;
         }
 
-        function initSlideshow(images, useDefaultImages = false) {
+        function initSlideshow(images) {
             const slideshow = document.getElementById('slideshow');
-            const nav = document.getElementById('slideshow-nav');
+            slideshow.innerHTML = '';
             
-            slideshow.innerHTML = images.map((img, index) => `
-                <div class="slide ${index === 0 ? 'active' : ''}">
-                    <img src="${img.file_path}" alt="${img.file_name}">
-                </div>
-            `).join('');
+            // Create container
+            const container = document.createElement('div');
+            container.className = 'slideshow-container';
+            slideshow.appendChild(container);
             
-            nav.innerHTML = images.map((_, index) => `
-                <span class="slideshow-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
-            `).join('');
-
-            const slides = document.querySelectorAll('.slide');
-            const dots = document.querySelectorAll('.slideshow-dot');
-            let currentSlide = 0;
-            const slideInterval = 5000;
+            // Add slides
+            images.forEach((img, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'slide';
+                slide.innerHTML = `
+                    <img src="${img.file_path}" 
+                        alt="${img.file_name}"
+                        onerror="this.style.display='none'">
+                `;
+                container.appendChild(slide);
+            });
+            
+            // Add navigation
+            const nav = document.createElement('div');
+            nav.className = 'slideshow-nav';
+            slideshow.appendChild(nav);
+            
+            // Initialize
+            const slides = container.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            let currentIndex = 0;
             
             function showSlide(index) {
                 slides.forEach(slide => slide.classList.remove('active'));
-                dots.forEach(dot => dot.classList.remove('active'));
-                
                 slides[index].classList.add('active');
-                dots[index].classList.add('active');
-                currentSlide = index;
+                currentIndex = index;
             }
             
             function nextSlide() {
-                const nextIndex = (currentSlide + 1) % slides.length;
+                const nextIndex = (currentIndex + 1) % totalSlides;
                 showSlide(nextIndex);
             }
             
-            let slideTimer = setInterval(nextSlide, slideInterval);
+            // Start slideshow
+            showSlide(0);
+            const interval = setInterval(nextSlide, 2000);
             
-            const slideshowContainer = document.querySelector('.slideshow-container');
-            slideshowContainer.addEventListener('mouseenter', () => {
-                clearInterval(slideTimer);
-            });
-            
-            slideshowContainer.addEventListener('mouseleave', () => {
-                slideTimer = setInterval(nextSlide, slideInterval);
-            });
-            
-            dots.forEach(dot => {
-                dot.addEventListener('click', function() {
-                    const slideIndex = parseInt(this.getAttribute('data-index'));
-                    showSlide(slideIndex);
-                });
-            });
+            // Cleanup on destroy
+            return () => clearInterval(interval);
         }
     </script>
 </body>
