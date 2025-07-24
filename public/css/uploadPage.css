@@ -639,3 +639,87 @@ textarea {
   align-items: center;
   justify-content: center;
 }
+
+/* Add these styles to your uploadPage.css */
+
+.media-sections {
+  margin-top: 30px;
+  width: 100%;
+  overflow: visible;
+}
+
+.media-section {
+  margin-bottom: 40px;
+  width: 100%;
+}
+
+.media-grid-container {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 20px;
+}
+
+.media-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  min-width: min-content;
+  padding-bottom: 10px;
+}
+
+.media-item {
+  flex: 0 0 180px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.media-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.media-item img,
+.media-item video {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.media-info {
+  padding: 10px;
+  background: #f8f9fa;
+  border-top: 1px solid #eee;
+  position: relative;
+  min-height: 80px;
+}
+
+.no-media {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  width: 100%;
+}
+
+/* Scrollbar styling for the grid container */
+.media-grid-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.media-grid-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.media-grid-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.media-grid-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}

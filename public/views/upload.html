@@ -75,20 +75,25 @@
                     <div class="message" id="message" style="display: none;"></div>
                     
                     <!-- User's Media Gallery -->
+                    <!-- Replace the existing media-sections div with this -->
                     <div class="media-sections">
                         <!-- Images Section -->
                         <div class="media-section">
                             <h3><i class="fas fa-images"></i> Your Uploaded Images</h3>
-                            <div class="media-grid" id="imagesGrid">
-                                <!-- Image items will be loaded here -->
+                            <div class="media-grid-container">
+                                <div class="media-grid" id="imagesGrid">
+                                    <!-- Image items will be loaded here -->
+                                </div>
                             </div>
                         </div>
                         
                         <!-- Videos Section -->
                         <div class="media-section">
                             <h3><i class="fas fa-video"></i> Your Uploaded Videos</h3>
-                            <div class="media-grid" id="videosGrid">
-                                <!-- Video items will be loaded here -->
+                            <div class="media-grid-container">
+                                <div class="media-grid" id="videosGrid">
+                                    <!-- Video items will be loaded here -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -258,7 +263,7 @@
                         filePreview.innerHTML = '';
                         uploadBtn.style.display = 'none';
                         
-                        // Reload media gallery
+                        // Load only the newly uploaded media
                         loadUserMedia();
                     } else {
                         showMessage(data.message || 'Some files failed to upload', 'error');
@@ -289,25 +294,41 @@
             }
             
             // Function to render media grid
+            // Modified renderMediaGrid function
             function renderMediaGrid(media) {
                 const currentUserId = sessionStorage.getItem('userId');
                 const imagesGrid = document.getElementById('imagesGrid');
                 const videosGrid = document.getElementById('videosGrid');
                 
-                // Clear existing content
-                imagesGrid.innerHTML = '';
-                videosGrid.innerHTML = '';
+                // Don't clear existing content - we'll append new items
+                // Instead, we'll track which items we've already rendered
+                const existingIds = new Set();
                 
-                // Separate images and videos
-                const images = media.filter(item => item.file_type.startsWith('image/'));
-                const videos = media.filter(item => item.file_type.startsWith('video/'));
+                // Get IDs of already rendered items
+                document.querySelectorAll('.media-item').forEach(item => {
+                    existingIds.add(item.getAttribute('data-id'));
+                });
                 
-                // Render images
-                if (images.length === 0) {
-                    imagesGrid.innerHTML = '<p class="no-media">No images uploaded yet.</p>';
-                } else {
-                    imagesGrid.innerHTML = images.map(item => `
-                        <div class="media-item" data-id="${item.id}">
+                // Separate new images and videos that haven't been rendered yet
+                const newImages = media.filter(item => 
+                    item.file_type.startsWith('image/') && !existingIds.has(item.id.toString())
+                );
+                
+                const newVideos = media.filter(item => 
+                    item.file_type.startsWith('video/') && !existingIds.has(item.id.toString())
+                );
+                
+                // Render new images if there are any
+                if (newImages.length > 0) {
+                    // Remove "no media" message if it exists
+                    const noImagesMsg = imagesGrid.querySelector('.no-media');
+                    if (noImagesMsg) imagesGrid.removeChild(noImagesMsg);
+                    
+                    newImages.forEach(item => {
+                        const imgElement = document.createElement('div');
+                        imgElement.className = 'media-item';
+                        imgElement.setAttribute('data-id', item.id);
+                        imgElement.innerHTML = `
                             <img src="${item.file_path}" alt="${item.file_name}">
                             <div class="media-info">
                                 <p class="media-name">${item.file_name}</p>
@@ -317,16 +338,22 @@
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
-                        </div>
-                    `).join('');
+                        `;
+                        imagesGrid.appendChild(imgElement);
+                    });
                 }
                 
-                // Render videos
-                if (videos.length === 0) {
-                    videosGrid.innerHTML = '<p class="no-media">No videos uploaded yet.</p>';
-                } else {
-                    videosGrid.innerHTML = videos.map(item => `
-                        <div class="media-item" data-id="${item.id}">
+                // Render new videos if there are any
+                if (newVideos.length > 0) {
+                    // Remove "no media" message if it exists
+                    const noVideosMsg = videosGrid.querySelector('.no-media');
+                    if (noVideosMsg) videosGrid.removeChild(noVideosMsg);
+                    
+                    newVideos.forEach(item => {
+                        const videoElement = document.createElement('div');
+                        videoElement.className = 'media-item';
+                        videoElement.setAttribute('data-id', item.id);
+                        videoElement.innerHTML = `
                             <video controls>
                                 <source src="${item.file_path}" type="${item.file_type}">
                             </video>
@@ -338,40 +365,60 @@
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
-                        </div>
-                    `).join('');
+                        `;
+                        videosGrid.appendChild(videoElement);
+                    });
                 }
                 
-                // Add delete button functionality
+                // If no items exist at all, show appropriate message
+                if (imagesGrid.children.length === 0) {
+                    imagesGrid.innerHTML = '<p class="no-media">No images uploaded yet.</p>';
+                }
+                if (videosGrid.children.length === 0) {
+                    videosGrid.innerHTML = '<p class="no-media">No videos uploaded yet.</p>';
+                }
+                
+                // Add event listeners to new delete buttons
                 document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', async function(e) {
-                        e.stopPropagation();
-                        const mediaId = this.getAttribute('data-id');
-                        
-                        if (confirm('Are you sure you want to delete this item?')) {
-                            try {
-                                const response = await fetch(`/upload/${mediaId}`, {
-                                    method: 'DELETE',
-                                    credentials: 'include'
-                                });
-                                
-                                const data = await response.json();
-                                
-                                if (data.success) {
-                                    showMessage('Item deleted successfully', 'success');
-                                    loadUserMedia(); // Refresh the grid
-                                } else {
-                                    showMessage(data.message || 'Failed to delete item', 'error');
+                    // Only add listener if not already attached
+                    if (!btn.hasAttribute('data-listener-attached')) {
+                        btn.setAttribute('data-listener-attached', 'true');
+                        btn.addEventListener('click', async function(e) {
+                            e.stopPropagation();
+                            const mediaId = this.getAttribute('data-id');
+                            
+                            if (confirm('Are you sure you want to delete this item?')) {
+                                try {
+                                    const response = await fetch(`/upload/${mediaId}`, {
+                                        method: 'DELETE',
+                                        credentials: 'include'
+                                    });
+                                    
+                                    const data = await response.json();
+                                    
+                                    if (data.success) {
+                                        showMessage('Item deleted successfully', 'success');
+                                        // Remove the deleted item from the DOM
+                                        this.closest('.media-item').remove();
+                                        
+                                        // If no items left, show "no media" message
+                                        const grid = this.closest('.media-grid');
+                                        if (grid.children.length === 0) {
+                                            grid.innerHTML = '<p class="no-media">No media uploaded yet.</p>';
+                                        }
+                                    } else {
+                                        showMessage(data.message || 'Failed to delete item', 'error');
+                                    }
+                                } catch (error) {
+                                    console.error('Delete error:', error);
+                                    showMessage('Error deleting item', 'error');
                                 }
-                            } catch (error) {
-                                console.error('Delete error:', error);
-                                showMessage('Error deleting item', 'error');
                             }
-                        }
-                    });
+                        });
+                    }
                 });
             }
-        
+                    
             function formatFileSize(bytes) {
                 if (bytes === 0) return '0 Bytes';
                 const k = 1024;
