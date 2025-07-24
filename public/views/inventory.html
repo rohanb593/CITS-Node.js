@@ -80,43 +80,73 @@
     </div>    
 
     <script>
+        // Replace your existing script with this
         document.addEventListener('DOMContentLoaded', function() {
-            // Load user data
-            const username = sessionStorage.getItem('username') || 'Admin';
-            const city = sessionStorage.getItem('city') || 'Lusaka';
-            document.getElementById('usernameDisplay').textContent = username;
-            document.getElementById('cityDisplay').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city}`;
+        // Load user data
+        const username = sessionStorage.getItem('username') || 'Admin';
+        const city = sessionStorage.getItem('city') || 'Lusaka';
+        document.getElementById('usernameDisplay').textContent = username;
+        document.getElementById('cityDisplay').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city}`;
 
-            // Load inventory data from API
-            fetchInventoryData();
-            
-            // Load slideshow images and video from database
-            fetchMedia();
+        // Initialize real-time connection
+        setupRealTimeUpdates();
         });
 
-        async function fetchInventoryData() {
+        function setupRealTimeUpdates() {
+        const eventSource = new EventSource('/inventory/api/sse');
+
+        eventSource.onmessage = (event) => {
             try {
-                const response = await fetch('/inventory/api');
-                
-                if (!response.ok) {
-                throw new Error(`Server returned ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (!data.items || !Array.isArray(data.items)) {
-                throw new Error('Invalid data format received from server');
-                }
-                
-                renderInventory(data.items, data.totals || {});
-                
+            const data = JSON.parse(event.data);
+            renderInventory(data.items, data.totals);
             } catch (error) {
-                console.error('Fetch Error:', error);
-                alert(`Failed to load inventory: ${error.message}\nCheck console for details.`);
-                // Show empty state
-                renderInventory([], { total_items: 0, total_discount: 0, total_price: 0 });
+            console.error('Error parsing SSE data:', error);
             }
+        };
+
+        eventSource.onerror = (error) => {
+            console.error('SSE Error:', error);
+            // Attempt to reconnect after 5 seconds
+            setTimeout(setupRealTimeUpdates, 5000);
+        };
         }
+
+        function renderInventory(items, totals) {
+        const itemsBody = document.getElementById('live-inventory-body');
+        const totalsBody = document.getElementById('live-totals-table');
+        
+        // Clear previous content
+        itemsBody.innerHTML = '';
+        totalsBody.innerHTML = '';
+
+        // Helper function to safely format numbers
+        const formatNumber = (value) => {
+            const num = Number(value) || 0;
+            return num.toFixed(2);
+        };
+
+        // Render items
+        items.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+            <td>${item.VC_ITEM_DESC || 'N/A'}</td>
+            <td>${item.NU_QTY || 0}</td>
+            <td>${formatNumber(item.NU_DISCOUNT)}%</td>
+            <td>$${formatNumber(item.NU_ITEM_PRICE)}</td>
+            <td>$${formatNumber(item.NU_LINE_TOTAL)}</td>
+            `;
+            itemsBody.appendChild(row);
+        });
+
+        // Render totals
+        const totalsRow = document.createElement('tr');
+        totalsRow.innerHTML = `
+            <td>${totals.total_items || 0}</td>
+            <td>$${formatNumber(totals.total_discount)}</td>
+            <td>$${formatNumber(totals.total_price)}</td>
+        `;
+        totalsBody.appendChild(totalsRow);
+    }
 
         async function fetchMedia() {
             try {

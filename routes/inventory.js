@@ -15,5 +15,7 @@ router.get('/', (req, res) => {
 // API endpoints
 router.get('/api', inventoryController.getInventory);
 router.get('/api/sse', inventoryController.sseInventory);
+// Add this to your existing inventory.js routes
+router.get('/api/sse', inventoryController.sseInventoryUpdates);
 
 module.exports = router;
