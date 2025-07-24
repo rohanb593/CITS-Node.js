@@ -347,22 +347,295 @@ textarea {
     text-align: center;
 }
 
+/* Add these styles to uploadPage.css */
+.media-sections {
+  margin-top: 30px;
+}
+
+.media-section {
+  margin-bottom: 30px;
+}
+
+.media-section h3 {
+  color: var(--secondary);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.media-section h3 i {
+  color: var(--primary);
+}
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.media-item {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.media-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.media-item img,
+.media-item video {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.media-info {
+  padding: 10px;
+  background: #f8f9fa;
+  border-top: 1px solid #eee;
+}
+
+.media-name {
+  font-weight: 500;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.media-size, .media-date {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 2px 0;
+}
+
+.media-selector {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 2;
+}
+
+.media-selector input[type="checkbox"] {
+  display: none;
+}
+
+.media-selector label {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.media-selector input[type="checkbox"]:checked + label {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.media-item.selected {
+  border: 2px solid var(--primary);
+}
+
+.no-media {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  grid-column: 1 / -1;
+}
+
+.bulk-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Add these styles to uploadPage.css */
+
+/* Upload Area Styles */
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+}
+
+.upload-area i {
+  font-size: 48px;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.upload-area h3 {
+  margin: 10px 0;
+  color: var(--sidebar-bg);
+}
+
+.upload-area p {
+  color: #666;
+  margin: 0;
+}
+
+/* File Preview Styles */
+.file-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.file-preview-item {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: #fff;
+  height: 180px; /* Match the height with the media grid items */
+}
+
+.file-preview-item img,
+.file-preview-item video {
+  width: 100%;
+  height: 120px; /* Match the height with the media grid items */
+  object-fit: cover;
+  display: block;
+}
+
+.file-preview-item .remove-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make sure the uploaded media items match the preview size */
+.media-item img,
+.media-item video {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Adjust the media grid to match the preview grid */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.media-item {
+  height: 180px;
+   /* Match the preview item height */
+}
+
+/* Update these styles in uploadPage.css */
+
+.media-item {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: auto; /* Remove fixed height */
+}
+
+.media-item img,
+.media-item video {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.media-info {
+  padding: 10px;
+  background: #f8f9fa;
+  border-top: 1px solid #eee;
+  position: relative; /* Add this for proper button positioning */
+  min-height: 80px; /* Ensure enough space for the button */
+}
+
 .delete-btn {
-    background-color: #ff6b00;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 14px;
-    width: 100%;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  padding: 5px 10px;
+  font-size: 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .delete-btn:hover {
-    background-color: #e05d00;
+  background-color: #c82333;
 }
 
 .delete-btn i {
-    margin-right: 5px;
+  font-size: 12px;
+}
+
+/* Ensure media grid items have consistent height */
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+/* Adjust the preview items to match */
+.file-preview-item {
+  height: auto; /* Remove fixed height */
+}
+
+.file-preview-item .remove-btn {
+  /* Keep existing styles */
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  border: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

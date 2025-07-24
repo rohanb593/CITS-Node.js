@@ -35,7 +35,11 @@ exports.login = async (req, res) => {
         req.session.username = user.username;
         req.session.city = city;
 
-        res.json({ success: true, redirect: '/home' });
+        res.json({ 
+            success: true, 
+            redirect: '/home',
+            userId: user.id // Send user ID to client
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });

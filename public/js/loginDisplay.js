@@ -21,6 +21,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             // Store user data in sessionStorage
             sessionStorage.setItem('username', username);
             sessionStorage.setItem('city', city);
+            sessionStorage.setItem('userId', data.userId); // Store user ID
             window.location.href = data.redirect;
         } else {
             showError(data.error);

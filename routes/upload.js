@@ -14,7 +14,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// In upload.js - modify the multer configuration
 const upload = multer({ 
     storage,
     limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
@@ -27,9 +26,6 @@ const upload = multer({
     }
 });
 
-// Change the upload route to remove the file count limit for images
-router.post('/', upload.array('mediaFiles'), uploadController.uploadFiles);
-
 // Serve the upload page
 router.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/views/upload.html'));
@@ -39,9 +35,12 @@ router.get('/', (req, res) => {
 router.get('/media', uploadController.getUserMedia);
 
 // Handle file upload
-router.post('/', upload.array('mediaFiles', 5), uploadController.uploadFiles);
+router.post('/', upload.array('mediaFiles'), uploadController.uploadFiles);
 
-// Handle file deletion
+// Handle single file deletion
 router.delete('/:id', uploadController.deleteFile);
+
+// Handle bulk deletion
+router.delete('/bulk-delete', uploadController.bulkDeleteMedia);
 
 module.exports = router;

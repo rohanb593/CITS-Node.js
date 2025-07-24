@@ -119,7 +119,7 @@
                 const data = await response.json();
                 
                 if (data.success && data.media) {
-                    // Separate images and videos
+                    // Separate images and videos from all users
                     const images = data.media.filter(item => 
                         item.file_type.startsWith('image/')
                     );
@@ -128,7 +128,7 @@
                         item.file_type.startsWith('video/')
                     );
                     
-                    // Initialize slideshow with images
+                    // Initialize slideshow with all images
                     if (images.length > 0) {
                         initSlideshow(images);
                     } else {
@@ -140,9 +140,9 @@
                         ], true);
                     }
                     
-                    // Initialize video player with ALL videos (not just first one)
+                    // Initialize video player with ALL videos from all users
                     if (videos.length > 0) {
-                        initVideoPlayer(videos); // Pass the array of videos
+                        initVideoPlayer(videos);
                     } else {
                         // Fallback to default video
                         initVideoPlayer([{

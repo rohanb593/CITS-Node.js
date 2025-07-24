@@ -119,17 +119,24 @@ exports.deleteFile = async (req, res) => {
         const userId = req.session.userId;
         const fileId = req.params.id;
 
-        // Get file path from database
+        // First check if file exists
         const [fileRows] = await db.query(
-            'SELECT file_path FROM uploaded_media WHERE id = ? AND user_id = ?',
-            [fileId, userId]
+            'SELECT * FROM uploaded_media WHERE id = ?',
+            [fileId]
         );
 
         if (fileRows.length === 0) {
-            return res.status(404).json({ success: false, message: 'File not found or not authorized' });
+            return res.status(404).json({ success: false, message: 'File not found' });
         }
 
-        const filePath = fileRows[0].file_path;
+        const file = fileRows[0];
+        
+        // Only allow deletion by owner (or you could add admin check here)
+        if (file.user_id !== userId) {
+            return res.status(403).json({ success: false, message: 'Not authorized to delete this file' });
+        }
+
+        const filePath = file.file_path;
         const fullPath = path.join(__dirname, '../public', filePath);
         
         // Delete from filesystem
@@ -152,16 +159,67 @@ exports.deleteFile = async (req, res) => {
 
 exports.getUserMedia = async (req, res) => {
     try {
-        const userId = req.session.userId;
-        
+        // Remove the user_id filter to get all media
         const [media] = await db.query(
-            'SELECT id, file_name, file_type, file_size, file_path, uploaded_at FROM uploaded_media WHERE user_id = ? ORDER BY uploaded_at DESC LIMIT 10',
-            [userId]
+            'SELECT id, file_name, file_type, file_size, file_path, uploaded_at FROM uploaded_media ORDER BY uploaded_at DESC LIMIT 10'
         );
 
         res.json({ success: true, media });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Add this new method to uploadController.js
+exports.bulkDeleteMedia = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const { ids } = req.body;
+
+        if (!userId) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Not authenticated' 
+            });
+        }
+
+        // Get files to delete
+        const [files] = await db.query(
+            'SELECT id, file_path FROM uploaded_media WHERE id IN (?) AND user_id = ?',
+            [ids, userId]
+        );
+
+        if (files.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'No files found for deletion' 
+            });
+        }
+
+        // Delete from filesystem
+        files.forEach(file => {
+            const fullPath = path.join(__dirname, '../public', file.file_path);
+            if (fs.existsSync(fullPath)) {
+                fs.unlinkSync(fullPath);
+            }
+        });
+
+        // Delete from database
+        await db.query(
+            'DELETE FROM uploaded_media WHERE id IN (?) AND user_id = ?',
+            [ids, userId]
+        );
+
+        res.json({ 
+            success: true, 
+            message: `${files.length} file(s) deleted successfully` 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message 
+        });
     }
 };

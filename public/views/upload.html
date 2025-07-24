@@ -75,9 +75,22 @@
                     <div class="message" id="message" style="display: none;"></div>
                     
                     <!-- User's Media Gallery -->
-                    <h3 style="margin-top: 30px;"><i class="fas fa-images"></i> Your Uploaded Media</h3>
-                    <div class="media-grid" id="mediaGrid">
-                        <!-- Media items will be loaded here -->
+                    <div class="media-sections">
+                        <!-- Images Section -->
+                        <div class="media-section">
+                            <h3><i class="fas fa-images"></i> Your Uploaded Images</h3>
+                            <div class="media-grid" id="imagesGrid">
+                                <!-- Image items will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Videos Section -->
+                        <div class="media-section">
+                            <h3><i class="fas fa-video"></i> Your Uploaded Videos</h3>
+                            <div class="media-grid" id="videosGrid">
+                                <!-- Video items will be loaded here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -100,7 +113,6 @@
             const progressContainer = document.getElementById('progressContainer');
             const progressBar = document.getElementById('progressBar');
             const messageDiv = document.getElementById('message');
-            const mediaGrid = document.getElementById('mediaGrid');
             
             let selectedFiles = [];
             
@@ -278,67 +290,95 @@
             
             // Function to render media grid
             function renderMediaGrid(media) {
-                if (media.length === 0) {
-                    mediaGrid.innerHTML = '<p>No media files uploaded yet.</p>';
-                    return;
+                const currentUserId = sessionStorage.getItem('userId');
+                const imagesGrid = document.getElementById('imagesGrid');
+                const videosGrid = document.getElementById('videosGrid');
+                
+                // Clear existing content
+                imagesGrid.innerHTML = '';
+                videosGrid.innerHTML = '';
+                
+                // Separate images and videos
+                const images = media.filter(item => item.file_type.startsWith('image/'));
+                const videos = media.filter(item => item.file_type.startsWith('video/'));
+                
+                // Render images
+                if (images.length === 0) {
+                    imagesGrid.innerHTML = '<p class="no-media">No images uploaded yet.</p>';
+                } else {
+                    imagesGrid.innerHTML = images.map(item => `
+                        <div class="media-item" data-id="${item.id}">
+                            <img src="${item.file_path}" alt="${item.file_name}">
+                            <div class="media-info">
+                                <p class="media-name">${item.file_name}</p>
+                                <p class="media-size">${formatFileSize(item.file_size)}</p>
+                                <p class="media-date">${new Date(item.uploaded_at).toLocaleString()}</p>
+                                <button class="btn btn-danger delete-btn" data-id="${item.id}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
                 }
                 
-                mediaGrid.innerHTML = media.map(item => `
-                    <div class="media-item" data-id="${item.id}">
-                        ${item.file_type.startsWith('image/') ? 
-                            `<img src="${item.file_path}" alt="${item.file_name}">` : 
-                            `<video controls>
+                // Render videos
+                if (videos.length === 0) {
+                    videosGrid.innerHTML = '<p class="no-media">No videos uploaded yet.</p>';
+                } else {
+                    videosGrid.innerHTML = videos.map(item => `
+                        <div class="media-item" data-id="${item.id}">
+                            <video controls>
                                 <source src="${item.file_path}" type="${item.file_type}">
-                            </video>`
-                        }
-                        <div class="media-info">
-                            <p><strong>${item.file_name}</strong></p>
-                            <p>${formatFileSize(item.file_size)}</p>
-                            <p>${new Date(item.uploaded_at).toLocaleString()}</p>
-                            <button class="delete-btn" data-id="${item.id}">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
+                            </video>
+                            <div class="media-info">
+                                <p class="media-name">${item.file_name}</p>
+                                <p class="media-size">${formatFileSize(item.file_size)}</p>
+                                <p class="media-date">${new Date(item.uploaded_at).toLocaleString()}</p>
+                                <button class="btn btn-danger delete-btn" data-id="${item.id}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `).join('');
+                }
                 
-                // Add delete functionality
+                // Add delete button functionality
                 document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', async function() {
-                        const fileId = this.getAttribute('data-id');
+                    btn.addEventListener('click', async function(e) {
+                        e.stopPropagation();
+                        const mediaId = this.getAttribute('data-id');
                         
-                        if (confirm('Are you sure you want to delete this file?')) {
+                        if (confirm('Are you sure you want to delete this item?')) {
                             try {
-                                const response = await fetch(`/upload/${fileId}`, {
-                                    method: 'DELETE'
+                                const response = await fetch(`/upload/${mediaId}`, {
+                                    method: 'DELETE',
+                                    credentials: 'include'
                                 });
                                 
                                 const data = await response.json();
                                 
                                 if (data.success) {
-                                    showMessage('File deleted successfully', 'success');
+                                    showMessage('Item deleted successfully', 'success');
                                     loadUserMedia(); // Refresh the grid
                                 } else {
-                                    showMessage('Failed to delete file', 'error');
+                                    showMessage(data.message || 'Failed to delete item', 'error');
                                 }
                             } catch (error) {
                                 console.error('Delete error:', error);
-                                showMessage('Error deleting file', 'error');
+                                showMessage('Error deleting item', 'error');
                             }
                         }
                     });
                 });
             }
-            
-            // Helper function to format file size
-            // Helper function to format file size
+        
             function formatFileSize(bytes) {
                 if (bytes === 0) return '0 Bytes';
                 const k = 1024;
                 const sizes = ['Bytes', 'KB', 'MB', 'GB'];
                 const i = Math.floor(Math.log(bytes) / Math.log(k));
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]);
-}
+            }
             
             // Helper function to show messages
             function showMessage(text, type) {
@@ -353,23 +393,23 @@
         });
     </script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get user data from sessionStorage
-        const username = sessionStorage.getItem('username') || 'User';
-        const city = sessionStorage.getItem('city') || 'Unknown City';
-        
-        document.getElementById('usernameDisplay').textContent = username;
-        document.getElementById('cityDisplay').textContent = city;
-        
-        // Logout functionality
-        document.querySelector('.logout a').addEventListener('click', function(e) {
-            e.preventDefault();
-            sessionStorage.removeItem('username');
-            sessionStorage.removeItem('city');
-            window.location.href = '/auth/login';
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get user data from sessionStorage
+            const username = sessionStorage.getItem('username') || 'User';
+            const city = sessionStorage.getItem('city') || 'Unknown City';
+            
+            document.getElementById('usernameDisplay').textContent = username;
+            document.getElementById('cityDisplay').textContent = city;
+            
+            // Logout functionality
+            document.querySelector('.logout a').addEventListener('click', function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('city');
+                window.location.href = '/auth/login';
+            });
         });
-    });
-</script>
+    </script>
 </body>
 </html>
