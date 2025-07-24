@@ -68,11 +68,13 @@ app.use('/inventory', inventoryRoutes);
 
 // Session verification middleware
 const verifySession = (req, res, next) => {
+    console.log('Session Check:', req.session); // Add this
     if (!req.session.userId) {
-        return res.status(401).json({ 
-            success: false, 
-            message: 'Not authenticated' 
-        });
+      console.warn('Unauthorized access attempt to:', req.originalUrl);
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Not authenticated' 
+      });
     }
     next();
 };
