@@ -52,22 +52,21 @@ header h1 {
 
 /* ===== Main Content Container ===== */
 .table-and-slideshow-container {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 380px; /* Fixed width for media */
     gap: 20px;
     height: calc(100% - 40px);
 }
 
 .tables-container {
-    flex: 2.5;
-    min-width: 65%;
     display: flex;
     flex-direction: column;
     gap: 15px;
+    overflow: hidden;
 }
 
 .media-container {
-    flex: 1;
-    min-width: 30%;
+    width: 380px; /* Fixed width */
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -84,6 +83,12 @@ header h1 {
     overflow: hidden;
     box-shadow: 0 2px 15px rgba(255, 107, 0, 0.1);
     table-layout: auto;
+}
+
+.inventory-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .inventory-table thead tr {
@@ -122,7 +127,7 @@ header h1 {
 /* Column Widths */
 .inventory-table th:nth-child(1),
 .inventory-table td:nth-child(1) {
-    min-width: 220px; /* Description column */
+    min-width: 220px;
 }
 
 .inventory-table th:nth-child(2),
@@ -136,10 +141,22 @@ header h1 {
 .inventory-table td:nth-child(4),
 .inventory-table th:nth-child(5),
 .inventory-table td:nth-child(5) {
-    min-width: 110px; /* Price columns */
+    min-width: 110px;
 }
 
 /* Table Body Styles */
+.inventory-table tbody {
+    display: block;
+    overflow-y: auto;
+    max-height: calc(65vh - 60px); /* Adjust based on header height */
+}
+
+.inventory-table thead, .inventory-table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
 .inventory-table tbody tr {
     background-color: white;
     position: relative;
@@ -189,8 +206,9 @@ header h1 {
 /* Table Containers */
 .items-table-container {
     flex: 1;
-    overflow-y: auto;
-    max-height: 65vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .table-container {
@@ -200,16 +218,21 @@ header h1 {
     box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
     border: 1px solid #e0e0e0;
     padding: 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ===== Media Section Styles ===== */
 .slideshow-container, 
 .video-container {
-    height: calc(50% - 8px);
+    height: 300px; /* Fixed height */
+    width: 380px; /* Fixed width */
     background-color: white;
     border-radius: 6px;
     box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
     border: 1px solid #e0e0e0;
+    overflow: hidden;
 }
 
 .slide img,
@@ -217,8 +240,14 @@ header h1 {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
+/* Video specific styling */
+.video-container video {
+    background: #000;
+    object-position: center;
+}
 
 
 /* ===== Footer Styles ===== */
