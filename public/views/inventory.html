@@ -63,11 +63,12 @@
                             <!-- Dots will be loaded via JavaScript -->
                         </div>
                         
-                        <!-- VIDEO CONTAINER ADDED HERE -->
+                        <!-- VIDEO CONTAINER -->
                         <div class="video-container">
                             <video id="featuredVideo" controls>
                                 Your browser does not support the video tag.
                             </video>
+                            <div class="video-nav" id="video-nav"></div>
                         </div>
                     </aside>
                 </div>
@@ -80,73 +81,36 @@
     </div>    
 
     <script>
-        // Replace your existing script with this
         document.addEventListener('DOMContentLoaded', function() {
-        // Load user data
-        const username = sessionStorage.getItem('username') || 'Admin';
-        const city = sessionStorage.getItem('city') || 'Lusaka';
-        document.getElementById('usernameDisplay').textContent = username;
-        document.getElementById('cityDisplay').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city}`;
+            // Load user data
+            const username = sessionStorage.getItem('username') || 'Admin';
+            const city = sessionStorage.getItem('city') || 'Lusaka';
+            document.getElementById('usernameDisplay').textContent = username;
+            document.getElementById('cityDisplay').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${city}`;
 
-        // Initialize real-time connection
-        setupRealTimeUpdates();
+            // Initialize real-time updates and media
+            setupRealTimeUpdates();
+            fetchMedia();
         });
 
         function setupRealTimeUpdates() {
-        const eventSource = new EventSource('/inventory/api/sse');
+            const eventSource = new EventSource('/inventory/api/sse');
 
-        eventSource.onmessage = (event) => {
-            try {
-            const data = JSON.parse(event.data);
-            renderInventory(data.items, data.totals);
-            } catch (error) {
-            console.error('Error parsing SSE data:', error);
-            }
-        };
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    renderInventory(data.items, data.totals);
+                } catch (error) {
+                    console.error('Error parsing SSE data:', error);
+                }
+            };
 
-        eventSource.onerror = (error) => {
-            console.error('SSE Error:', error);
-            // Attempt to reconnect after 5 seconds
-            setTimeout(setupRealTimeUpdates, 5000);
-        };
+            eventSource.onerror = (error) => {
+                console.error('SSE Error:', error);
+                // Attempt to reconnect after 5 seconds
+                setTimeout(setupRealTimeUpdates, 5000);
+            };
         }
-
-        function renderInventory(items, totals) {
-        const itemsBody = document.getElementById('live-inventory-body');
-        const totalsBody = document.getElementById('live-totals-table');
-        
-        // Clear previous content
-        itemsBody.innerHTML = '';
-        totalsBody.innerHTML = '';
-
-        // Helper function to safely format numbers
-        const formatNumber = (value) => {
-            const num = Number(value) || 0;
-            return num.toFixed(2);
-        };
-
-        // Render items
-        items.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-            <td>${item.VC_ITEM_DESC || 'N/A'}</td>
-            <td>${item.NU_QTY || 0}</td>
-            <td>${formatNumber(item.NU_DISCOUNT)}%</td>
-            <td>$${formatNumber(item.NU_ITEM_PRICE)}</td>
-            <td>$${formatNumber(item.NU_LINE_TOTAL)}</td>
-            `;
-            itemsBody.appendChild(row);
-        });
-
-        // Render totals
-        const totalsRow = document.createElement('tr');
-        totalsRow.innerHTML = `
-            <td>${totals.total_items || 0}</td>
-            <td>$${formatNumber(totals.total_discount)}</td>
-            <td>$${formatNumber(totals.total_price)}</td>
-        `;
-        totalsBody.appendChild(totalsRow);
-    }
 
         async function fetchMedia() {
             try {
@@ -157,7 +121,7 @@
                 const data = await response.json();
                 
                 if (data.success && data.media) {
-                    // Separate images and videos from all users
+                    // Separate images and videos
                     const images = data.media.filter(item => 
                         item.file_type.startsWith('image/')
                     );
@@ -166,65 +130,46 @@
                         item.file_type.startsWith('video/')
                     );
                     
-                    // Initialize slideshow with all images
+                    // Initialize slideshow with images
                     if (images.length > 0) {
                         initSlideshow(images);
                     } else {
                         // Fallback to default images
                         initSlideshow([
-                            { id: 'default1', file_path: '/images/slide1.jpg', file_name: 'Default Image 1' },
-                            { id: 'default2', file_path: '/images/slide2.jpg', file_name: 'Default Image 2' },
-                            { id: 'default3', file_path: '/images/slide3.jpg', file_name: 'Default Image 3' }
-                        ], true);
+                            { id: 'default1', file_path: '/images/default1.jpg', file_name: 'Default Image 1' },
+                            { id: 'default2', file_path: '/images/default2.jpg', file_name: 'Default Image 2' }
+                        ]);
                     }
                     
-                    // Initialize video player with ALL videos from all users
+                    // Initialize video player with videos
                     if (videos.length > 0) {
                         initVideoPlayer(videos);
                     } else {
                         // Fallback to default video
                         initVideoPlayer([{
-                            file_path: '/videos/demo.mp4',
-                            file_name: 'Demo Video'
+                            file_path: '/videos/default.mp4',
+                            file_name: 'Default Video'
                         }]);
                     }
-                } else {
-                    console.error('Invalid data structure from media API');
-                    // Fallback to default media
-                    initSlideshow([
-                        { id: 'default1', file_path: '/images/slide1.jpg', file_name: 'Default Image 1' },
-                        { id: 'default2', file_path: '/images/slide2.jpg', file_name: 'Default Image 2' },
-                        { id: 'default3', file_path: '/images/slide3.jpg', file_name: 'Default Image 3' }
-                    ], true);
-                    
-                    initVideoPlayer([{
-                        file_path: '/videos/demo.mp4',
-                        file_name: 'Demo Video'
-                    }]);
                 }
             } catch (error) {
                 console.error('Error fetching media:', error);
                 // Fallback to default media
                 initSlideshow([
-                    { id: 'default1', file_path: '/images/slide1.jpg', file_name: 'Default Image 1' },
-                    { id: 'default2', file_path: '/images/slide2.jpg', file_name: 'Default Image 2' },
-                    { id: 'default3', file_path: '/images/slide3.jpg', file_name: 'Default Image 3' }
-                ], true);
+                    { id: 'default1', file_path: '/images/default1.jpg', file_name: 'Default Image 1' },
+                    { id: 'default2', file_path: '/images/default2.jpg', file_name: 'Default Image 2' }
+                ]);
                 
                 initVideoPlayer([{
-                    file_path: '/videos/demo.mp4',
-                    file_name: 'Demo Video'
+                    file_path: '/videos/default.mp4',
+                    file_name: 'Default Video'
                 }]);
             }
         }
         
         function initVideoPlayer(videos) {
-            const videoContainer = document.querySelector('.video-container');
             const videoPlayer = document.getElementById('featuredVideo');
-            const videoNav = document.createElement('div');
-            videoNav.className = 'video-nav';
-            videoContainer.appendChild(videoNav);
-
+            const videoNav = document.getElementById('video-nav');
             let currentVideoIndex = 0;
             
             // Create navigation dots for videos
@@ -272,6 +217,68 @@
             }
         }
 
+        function initSlideshow(images) {
+            const slideshow = document.getElementById('slideshow');
+            const slideshowNav = document.getElementById('slideshow-nav');
+            
+            // Clear previous content
+            slideshow.innerHTML = '';
+            slideshowNav.innerHTML = '';
+            
+            // Create slides
+            images.forEach((img, index) => {
+                const slide = document.createElement('div');
+                slide.className = 'slide';
+                slide.innerHTML = `<img src="${img.file_path}" alt="${img.file_name}">`;
+                slideshow.appendChild(slide);
+                
+                // Create nav dot
+                const dot = document.createElement('span');
+                dot.className = index === 0 ? 'active' : '';
+                dot.setAttribute('data-index', index);
+                slideshowNav.appendChild(dot);
+            });
+
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('#slideshow-nav span');
+            let currentIndex = 0;
+            let slideInterval;
+            
+            function showSlide(index) {
+                // Wrap around if at ends
+                if (index >= slides.length) index = 0;
+                if (index < 0) index = slides.length - 1;
+                
+                // Hide all slides
+                slides.forEach(slide => slide.classList.remove('active'));
+                dots.forEach(dot => dot.classList.remove('active'));
+                
+                // Show current slide
+                slides[index].classList.add('active');
+                dots[index].classList.add('active');
+                
+                currentIndex = index;
+            }
+            
+            function nextSlide() {
+                showSlide(currentIndex + 1);
+            }
+            
+            // Start slideshow
+            showSlide(0);
+            slideInterval = setInterval(nextSlide, 3000);
+            
+            // Add click handlers for dots
+            dots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    clearInterval(slideInterval);
+                    const slideIndex = parseInt(this.getAttribute('data-index'));
+                    showSlide(slideIndex);
+                    slideInterval = setInterval(nextSlide, 3000);
+                });
+            });
+        }
+
         function renderInventory(items, totals) {
             const itemsBody = document.getElementById('live-inventory-body');
             const totalsBody = document.getElementById('live-totals-table');
@@ -307,56 +314,6 @@
                 <td>$${formatNumber(totals.total_price)}</td>
             `;
             totalsBody.appendChild(totalsRow);
-        }
-
-        function initSlideshow(images) {
-            const slideshow = document.getElementById('slideshow');
-            slideshow.innerHTML = '';
-            
-            // Create container
-            const container = document.createElement('div');
-            container.className = 'slideshow-container';
-            slideshow.appendChild(container);
-            
-            // Add slides
-            images.forEach((img, index) => {
-                const slide = document.createElement('div');
-                slide.className = 'slide';
-                slide.innerHTML = `
-                    <img src="${img.file_path}" 
-                        alt="${img.file_name}"
-                        onerror="this.style.display='none'">
-                `;
-                container.appendChild(slide);
-            });
-            
-            // Add navigation
-            const nav = document.createElement('div');
-            nav.className = 'slideshow-nav';
-            slideshow.appendChild(nav);
-            
-            // Initialize
-            const slides = container.querySelectorAll('.slide');
-            const totalSlides = slides.length;
-            let currentIndex = 0;
-            
-            function showSlide(index) {
-                slides.forEach(slide => slide.classList.remove('active'));
-                slides[index].classList.add('active');
-                currentIndex = index;
-            }
-            
-            function nextSlide() {
-                const nextIndex = (currentIndex + 1) % totalSlides;
-                showSlide(nextIndex);
-            }
-            
-            // Start slideshow
-            showSlide(0);
-            const interval = setInterval(nextSlide, 2000);
-            
-            // Cleanup on destroy
-            return () => clearInterval(interval);
         }
     </script>
 </body>

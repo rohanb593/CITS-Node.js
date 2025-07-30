@@ -159,15 +159,21 @@ exports.deleteFile = async (req, res) => {
 
 exports.getUserMedia = async (req, res) => {
     try {
-        // Remove the user_id filter to get all media
-        const [media] = await db.query(
-            'SELECT id, file_name, file_type, file_size, file_path, uploaded_at FROM uploaded_media ORDER BY uploaded_at DESC LIMIT 10'
-        );
-
-        res.json({ success: true, media });
+      const [media] = await db.query(
+        'SELECT id, file_name, file_type, file_size, file_path, uploaded_at FROM uploaded_media ORDER BY uploaded_at DESC LIMIT 10'
+      );
+      
+      // Add debug logging:
+      console.log('Media files found:', media.map(m => ({
+        id: m.id,
+        path: m.file_path,
+        type: m.file_type
+      })));
+      
+      res.json({ success: true, media });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, message: error.message });
+      console.error(error);
+      res.status(500).json({ success: false, message: error.message });
     }
 };
 
