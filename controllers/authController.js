@@ -17,7 +17,7 @@ exports.login = async (req, res) => {
         }
 
         // Check user exists
-        const [userRows] = await db.query('SELECT id, username, password FROM USERS WHERE username = ?', [username]);
+        const [userRows] = await db.query('SELECT id, username, password FROM USERS2 WHERE username = ?', [username]);
         if (userRows.length === 0) {
             return res.status(401).json({ error: 'User not found' });
         }
@@ -56,7 +56,7 @@ exports.signup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        await db.query('INSERT INTO USERS (username, password) VALUES (?, ?)', [username, hashedPassword]);
+        await db.query('INSERT INTO USERS2 (username, password) VALUES (?, ?)', [username, hashedPassword]);
         
         res.json({ success: true, redirect: '/auth/login' });
     } catch (error) {
