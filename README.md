@@ -1,4 +1,4 @@
-## Status: ✅ Complete
+**Status:** ✅ Complete
 
 # Corporate IT Solutions - Node.js Application
 
